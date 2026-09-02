@@ -30,25 +30,25 @@ export function MobileTabBar() {
     <nav
       ref={rootRef}
       aria-label="Main"
-      className="fixed inset-x-3 bottom-3 z-40 md:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 px-app pt-2 pb-[max(0.5rem,var(--safe-bottom))] md:hidden"
     >
-      <ul className="glass-strong mx-auto flex max-w-md items-stretch justify-between rounded-full px-2 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
+      <ul className="glass-strong mx-auto flex max-w-md items-stretch justify-between rounded-full px-1.5 py-1">
         {NAV_ITEMS.map((item) => {
           const active = isNavItemActive(pathname, item.href);
           return (
-            <li key={item.href} className="flex-1">
+            <li key={item.href} className="min-w-0 flex-1">
               <Link
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 rounded-full px-2 py-2 text-[11px] font-medium transition-colors",
+                  "flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-1.5 text-[11px] font-medium transition-colors",
                   active
                     ? "bg-brand-soft text-brand"
                     : "text-ink-subtle hover:text-ink",
                 )}
               >
                 {item.icon}
-                {item.label}
+                <span className="truncate">{item.label}</span>
               </Link>
             </li>
           );

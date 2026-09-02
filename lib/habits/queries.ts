@@ -5,6 +5,7 @@ import { isWithinRange, todayISO } from "@/lib/habits/dates";
 import { createClient } from "@/lib/supabase/server";
 import type {
   Badge,
+  GoalBadge,
   Habit,
   HabitLog,
   HabitPreset,
@@ -135,4 +136,30 @@ export const getUserBadges = cache(async (userId: string) => {
 
   if (error) throw error;
   return (data ?? []) as UserBadgeWithBadge[];
+});
+
+export const getGoalBadges = cache(async (userId: string) => {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("goal_badges")
+    .select("*")
+    .eq("user_id", userId)
+    .order("awarded_at", { ascending: false, nullsFirst: false })
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as GoalBadge[];
+});
+
+export const getGoalBadgeForHabit = cache(async (userId: string, habitId: string) => {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("goal_badges")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("habit_id", habitId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as GoalBadge | null) ?? null;
 });

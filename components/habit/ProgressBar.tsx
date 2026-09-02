@@ -34,8 +34,12 @@ export function ProgressBar({
 
   return (
     <div className={cn("space-y-1.5", className)}>
-      <div className="flex items-center justify-between gap-3 text-xs text-ink-muted">
-        {label ? <span>{label}</span> : <span />}
+      <div className="flex items-start justify-between gap-3 text-xs text-ink-muted">
+        {label ? (
+          <span className="min-w-0 flex-1 text-pretty leading-snug">{label}</span>
+        ) : (
+          <span />
+        )}
         <span
           ref={countRef}
           className="font-medium tabular-nums text-ink"

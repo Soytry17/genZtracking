@@ -1,10 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 
 import { animatePress, enterFromNear, useGsap } from "@/lib/anim";
 
+import { GoalBadgeFields } from "@/components/habit/GoalBadgeFields";
 import { HabitIcon } from "@/components/habit/HabitIcon";
+import { TemplateAssistiveTouch } from "@/components/habit/TemplateAssistiveTouch";
 import {
   Card,
   CardBody,
@@ -14,6 +16,7 @@ import {
 } from "@/components/ui";
 import { RippleCta } from "@/components/ui/ripple-cta";
 import {
+  DEFAULT_GOAL_BADGE_ICON,
   DEFAULT_HABIT_COLOR,
   DEFAULT_HABIT_ICON,
   HABIT_COLORS,
@@ -22,6 +25,7 @@ import {
   HABIT_DURATION_PRESETS,
   HABIT_ICONS,
   HABIT_TITLE_MAX_LENGTH,
+  habitColorHex,
 } from "@/lib/habits/constants";
 import {
   durationFromEndDate,
@@ -41,6 +45,36 @@ async function createHabitAction(
   return null;
 }
 
+function isPresetSelected(
+  preset: HabitPreset,
+  values: {
+    title: string;
+    color: string;
+    icon: string;
+    duration: number | "";
+  },
+) {
+  if (preset.title !== values.title) return false;
+  if (preset.color !== values.color) return false;
+  if (preset.icon !== values.icon) return false;
+  if (
+    preset.suggested_duration_days != null &&
+    preset.suggested_duration_days !== values.duration
+  ) {
+    return false;
+  }
+  return true;
+}
+
+function chipClassName(selected: boolean) {
+  return cn(
+    "inline-flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3 py-2 text-xs",
+    selected
+      ? "border-brand bg-brand-soft text-brand"
+      : "glass text-ink-muted hover:bg-glass-strong",
+  );
+}
+
 export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [state, action, pending] = useActionState(createHabitAction, null);
@@ -52,16 +86,11 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
   const [endDate, setEndDate] = useState(endDateFromDuration(today, 30));
   const [color, setColor] = useState<string>(DEFAULT_HABIT_COLOR);
   const [icon, setIcon] = useState<string>(DEFAULT_HABIT_ICON);
-
-  const categories = useMemo(() => {
-    const map = new Map<string, HabitPreset[]>();
-    for (const preset of presets) {
-      const list = map.get(preset.category) ?? [];
-      list.push(preset);
-      map.set(preset.category, list);
-    }
-    return [...map.entries()];
-  }, [presets]);
+  const [styleOpen, setStyleOpen] = useState(false);
+  const [goalBadgeOn, setGoalBadgeOn] = useState(false);
+  const [goalTitle, setGoalTitle] = useState("");
+  const [goalDescription, setGoalDescription] = useState("");
+  const [goalIcon, setGoalIcon] = useState<string>(DEFAULT_GOAL_BADGE_ICON);
 
   function applyDuration(days: number) {
     setDuration(days);
@@ -111,64 +140,24 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
     }
   }
 
-  return (
-    <div ref={rootRef} className="space-y-8">
-      {categories.length > 0 ? (
-        <section data-form-section className="space-y-4">
-          <div>
-            <h2 className="text-sm font-semibold">Start from a template</h2>
-            <p className="mt-1 text-sm text-ink-muted">
-              Pick one to fill the form. You can still edit everything.
-            </p>
-          </div>
-          {categories.map(([category, items]) => (
-            <div key={category}>
-              <p className="mb-2 text-xs font-medium uppercase tracking-wider text-ink-subtle">
-                {category}
-              </p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                {items.map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => applyPreset(preset)}
-                    className="flex items-start gap-3 rounded-2xl glass p-3 text-left transition-colors hover:bg-glass-strong"
-                  >
-                    <span
-                      className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg"
-                      style={{
-                        backgroundColor: `${HABIT_COLOR_HEX[preset.color as keyof typeof HABIT_COLOR_HEX] ?? HABIT_COLOR_HEX.violet}22`,
-                        color:
-                          HABIT_COLOR_HEX[preset.color as keyof typeof HABIT_COLOR_HEX] ??
-                          HABIT_COLOR_HEX.violet,
-                      }}
-                    >
-                      <HabitIcon name={preset.icon} />
-                    </span>
-                    <span>
-                      <span className="block text-sm font-medium text-ink">
-                        {preset.title}
-                      </span>
-                      <span className="mt-0.5 block text-xs text-ink-muted">
-                        {preset.suggested_duration_days
-                          ? `${preset.suggested_duration_days} days`
-                          : "Open-ended"}
-                        {preset.description ? ` · ${preset.description}` : ""}
-                      </span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-        </section>
-      ) : null}
+  const selectedPreset =
+    presets.find((preset) =>
+      isPresetSelected(preset, { title, color, icon, duration }),
+    ) ?? null;
 
+  return (
+    <div ref={rootRef} className="relative pb-28 md:pb-8">
+      <TemplateAssistiveTouch
+        presets={presets}
+        selectedId={selectedPreset?.id ?? null}
+        onPick={applyPreset}
+      />
       <Card data-form-section data-create-card>
-        <CardBody>
-          <form action={action} className="space-y-5">
+        <CardBody className="p-5">
+          <form action={action} className="space-y-4">
             <input type="hidden" name="color" value={color} />
             <input type="hidden" name="icon" value={icon} />
+            <input type="hidden" name="goal_badge_enabled" value={goalBadgeOn ? "1" : ""} />
 
             <Field label="Title" htmlFor="title">
               <input
@@ -192,14 +181,14 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
                 id="description"
                 name="description"
                 maxLength={HABIT_DESCRIPTION_MAX_LENGTH}
-                rows={3}
+                rows={2}
                 value={description}
                 onChange={(event) => setDescription(event.target.value)}
                 className={`${inputClassName} h-auto py-3`}
               />
             </Field>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4">
               <Field label="Start date" htmlFor="start_date">
                 <input
                   id="start_date"
@@ -242,12 +231,8 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
                   key={days}
                   type="button"
                   onClick={() => applyDuration(days)}
-                  className={cn(
-                    "rounded-full border px-2.5 py-1 text-xs",
-                    duration === days
-                      ? "border-brand bg-brand-soft text-brand"
-                      : "glass text-ink-muted hover:bg-glass-strong",
-                  )}
+                  aria-pressed={duration === days}
+                  className={chipClassName(duration === days)}
                 >
                   {days}d
                 </button>
@@ -266,44 +251,106 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
               />
             </Field>
 
-            <Field label="Color">
-              <div className="flex flex-wrap gap-2">
-                {HABIT_COLORS.map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setColor(key)}
-                    aria-label={key}
-                    className={cn(
-                      "size-8 rounded-full border-2",
-                      color === key ? "border-ink" : "border-transparent",
-                    )}
-                    style={{ backgroundColor: HABIT_COLOR_HEX[key] }}
-                  />
-                ))}
-              </div>
-            </Field>
+            <div className="rounded-2xl glass-thin">
+              <button
+                type="button"
+                aria-expanded={styleOpen}
+                onClick={() => setStyleOpen((open) => !open)}
+                className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-3 px-3.5 py-2.5 text-left"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="text-sm font-medium text-ink">Color & icon</span>
+                  {!styleOpen ? (
+                    <span className="inline-flex items-center gap-1.5 text-ink-muted">
+                      <span
+                        className="size-3 rounded-full"
+                        style={{ backgroundColor: habitColorHex(color) }}
+                      />
+                      <HabitIcon name={icon} className="size-3.5" />
+                    </span>
+                  ) : null}
+                </span>
+                <span className="text-xs text-ink-muted">
+                  {styleOpen ? "Hide" : "Show"}
+                </span>
+              </button>
+              {styleOpen ? (
+                <div className="space-y-4 border-t border-hairline px-3.5 py-3">
+                  <Field label="Color">
+                    <div className="flex flex-wrap gap-2">
+                      {HABIT_COLORS.map((key) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setColor(key)}
+                          aria-label={key}
+                          aria-pressed={color === key}
+                          className={cn(
+                            "size-11 cursor-pointer rounded-full border-2",
+                            color === key
+                              ? "border-ink ring-2 ring-ink ring-offset-2 ring-offset-canvas"
+                              : "border-transparent",
+                          )}
+                          style={{ backgroundColor: HABIT_COLOR_HEX[key] }}
+                        />
+                      ))}
+                    </div>
+                  </Field>
 
-            <Field label="Icon">
-              <div className="flex flex-wrap gap-1.5">
-                {HABIT_ICONS.map((key) => (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => setIcon(key)}
-                    className={cn(
-                      "flex size-9 items-center justify-center rounded-lg border",
-                      icon === key
-                        ? "border-brand bg-brand-soft text-brand"
-                        : "glass text-ink-muted hover:bg-glass-strong",
-                    )}
-                    aria-label={key}
-                  >
-                    <HabitIcon name={key} />
-                  </button>
-                ))}
+                  <Field label="Icon">
+                    <div className="flex flex-wrap gap-1.5">
+                      {HABIT_ICONS.map((key) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setIcon(key)}
+                          className={cn(
+                            "flex size-11 cursor-pointer items-center justify-center rounded-lg border",
+                            icon === key
+                              ? "border-brand bg-brand-soft text-brand"
+                              : "glass text-ink-muted hover:bg-glass-strong",
+                          )}
+                          aria-label={key}
+                          aria-pressed={icon === key}
+                        >
+                          <HabitIcon name={key} />
+                        </button>
+                      ))}
+                    </div>
+                  </Field>
+                </div>
+              ) : null}
+            </div>
+
+            <section className="space-y-3 rounded-2xl glass-thin px-3.5 py-2.5">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-medium text-ink">Goal badge</p>
+                  <p className="mt-0.5 text-xs text-ink-muted">
+                    Optional. Unlocks when you complete every day in the range.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-pressed={goalBadgeOn}
+                  onClick={() => setGoalBadgeOn((open) => !open)}
+                  className={chipClassName(goalBadgeOn)}
+                >
+                  {goalBadgeOn ? "On" : "Off"}
+                </button>
               </div>
-            </Field>
+              {goalBadgeOn ? (
+                <GoalBadgeFields
+                  title={goalTitle}
+                  description={goalDescription}
+                  icon={goalIcon}
+                  onTitle={setGoalTitle}
+                  onDescription={setGoalDescription}
+                  onIcon={setGoalIcon}
+                  disabled={pending}
+                />
+              ) : null}
+            </section>
 
             {state?.error ? (
               <p

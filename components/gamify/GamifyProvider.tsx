@@ -11,11 +11,12 @@ import {
 import { LevelUpOverlay } from "@/components/gamify/LevelUpOverlay";
 import { XpFloat } from "@/components/gamify/XpFloat";
 import type { GamifyDelta } from "@/lib/habits/actions";
-import type { Badge } from "@/types/database";
+import type { Badge, GoalBadge } from "@/types/database";
 
 type Overlay =
   | { kind: "level"; level: number }
   | { kind: "badge"; badge: Badge }
+  | { kind: "goal_badge"; badge: GoalBadge }
   | null;
 
 type GamifyContextValue = {
@@ -44,6 +45,8 @@ export function GamifyProvider({ children }: { children: React.ReactNode }) {
     if (delta.xpDelta > 0) setXpAmount(delta.xpDelta);
     if (delta.leveledUp) {
       setOverlay({ kind: "level", level: delta.newLevel });
+    } else if (delta.newGoalBadges[0]) {
+      setOverlay({ kind: "goal_badge", badge: delta.newGoalBadges[0] });
     } else if (delta.newBadges[0]) {
       setOverlay({ kind: "badge", badge: delta.newBadges[0] });
     }

@@ -144,6 +144,35 @@ export const DEFAULT_HABIT_ICON: HabitIcon = "sparkles";
 export const HABIT_TITLE_MAX_LENGTH = 120;
 export const HABIT_DESCRIPTION_MAX_LENGTH = 2000;
 export const DAY_NOTE_MAX_LENGTH = 2000;
+export const GOAL_BADGE_TITLE_MAX_LENGTH = 80;
+export const GOAL_BADGE_DESCRIPTION_MAX_LENGTH = 280;
+
+/** Emoji picker for personal goal badges. Stored as the character itself. */
+export const GOAL_BADGE_ICONS = [
+  "🏆",
+  "⭐",
+  "🔥",
+  "📚",
+  "💪",
+  "🎯",
+  "🌱",
+  "✨",
+  "🥇",
+  "💎",
+  "🌙",
+  "🧠",
+  "👑",
+  "🪄",
+] as const;
+
+export type GoalBadgeIcon = (typeof GOAL_BADGE_ICONS)[number];
+
+export const DEFAULT_GOAL_BADGE_ICON: GoalBadgeIcon = "🏆";
+
+export function isGoalBadgeIcon(value: string): value is GoalBadgeIcon {
+  return (GOAL_BADGE_ICONS as readonly string[]).includes(value);
+}
+
 export const HABIT_DURATION_MIN_DAYS = 1;
 export const HABIT_DURATION_MAX_DAYS = 3650;
 

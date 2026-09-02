@@ -23,42 +23,45 @@ export default async function AppLayout({
     <GamifyProvider>
       <div className="bg-magenta-orb-grid flex min-h-dvh flex-col">
         <ShellPresence>
-          <header data-shell className="sticky top-0 z-40 px-3 pt-3">
-            <div className="glass-strong mx-auto flex h-14 w-full max-w-6xl items-center gap-4 rounded-full px-4 sm:px-5">
+          <header data-shell className="sticky top-0 z-40 px-app pt-header">
+            <div className="glass-strong mx-auto flex h-14 w-full min-w-0 max-w-6xl items-center gap-2 rounded-2xl px-3 sm:gap-4 sm:rounded-full sm:px-5">
               <Link
                 href={ROUTES.today}
-                className="text-sm font-semibold tracking-tight text-ink"
+                className="shrink-0 text-sm font-semibold tracking-tight text-ink"
               >
                 genZ<span className="text-brand">tracking</span>
               </Link>
 
               <NavLinks />
 
-              <div className="ml-auto flex items-center gap-3">
-                <div data-slot="xp-bar" className="hidden min-w-40 sm:block">
+              <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-3">
+                <div
+                  data-slot="xp-bar"
+                  className="hidden min-w-0 max-w-28 sm:block md:max-w-32 lg:max-w-52"
+                >
                   <XpBar xp={profile?.xp ?? 0} level={profile?.level ?? 1} />
                 </div>
 
-                <div data-slot="freeze-tokens">
+                <div data-slot="freeze-tokens" className="shrink-0">
                   <FreezeTokens count={profile?.freeze_tokens ?? 0} />
                 </div>
 
                 <RippleCta
                   href={ROUTES.newHabit}
                   size="sm"
-                  className="hidden sm:inline-flex"
+                  className="hidden shrink-0 lg:inline-flex"
                 >
                   New habit
                 </RippleCta>
 
-                <div className="flex items-center gap-2">
-                  <span className="hidden text-sm text-ink-muted lg:inline">
+                <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+                  <span className="hidden max-w-32 truncate text-sm text-ink-muted lg:inline">
                     {name}
                   </span>
                   <form action="/auth/signout" method="post">
                     <button
                       type="submit"
-                      className="rounded-full px-2.5 py-2 text-sm text-ink-subtle transition-colors hover:bg-glass hover:text-ink"
+                      className="min-h-11 rounded-full px-2.5 py-2 text-sm text-ink-subtle transition-colors hover:bg-glass hover:text-ink sm:min-h-0"
                     >
                       Sign out
                     </button>
@@ -69,7 +72,7 @@ export default async function AppLayout({
           </header>
         </ShellPresence>
 
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-6 sm:px-6 md:pb-12">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-app pb-tabbar pt-5 md:pt-6">
           <PageEnter>{children}</PageEnter>
         </main>
 

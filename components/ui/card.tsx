@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("rounded-card glass shadow-glass", className)}
+      className={cn("min-w-0 rounded-card glass shadow-glass", className)}
       {...props}
     />
   );
@@ -17,7 +17,7 @@ export function CardHeader({
 }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-1 border-b border-hairline px-6 py-5", className)}
+      className={cn("flex min-w-0 flex-col gap-1 border-b border-hairline px-4 py-4 sm:px-6 sm:py-5", className)}
       {...props}
     />
   );
@@ -42,7 +42,7 @@ export function CardDescription({
 }
 
 export function CardBody({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("p-6", className)} {...props} />;
+  return <div className={cn("p-4 sm:p-6", className)} {...props} />;
 }
 
 type PillTone = "neutral" | "brand" | "success" | "warning" | "danger" | "freeze" | "xp";

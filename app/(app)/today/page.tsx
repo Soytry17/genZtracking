@@ -45,7 +45,7 @@ export default async function TodayPage() {
       ) : (
         <TodayList>
           {items.map(({ habit, log }) => (
-            <li key={habit.id}>
+            <li key={habit.id} className="min-w-0">
               <TodayRow habit={habit} log={log} />
             </li>
           ))}

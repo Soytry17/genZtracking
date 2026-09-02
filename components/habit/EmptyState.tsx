@@ -17,7 +17,7 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-panel glass px-6 py-14 text-center",
+        "flex flex-col items-center justify-center rounded-panel glass px-4 py-12 text-center sm:px-6 sm:py-14",
         className,
       )}
     >
@@ -56,10 +56,12 @@ export function HabitCardSkeleton() {
 
 export function DayGridSkeleton() {
   return (
-    <div className="grid grid-cols-7 gap-1.5">
-      {Array.from({ length: 28 }).map((_, i) => (
-        <Skeleton key={i} className="aspect-square rounded-xl" />
-      ))}
+    <div className="day-grid-scroll">
+      <div className="day-grid">
+        {Array.from({ length: 28 }).map((_, i) => (
+          <Skeleton key={i} className="aspect-square min-h-11 rounded-xl" />
+        ))}
+      </div>
     </div>
   );
 }

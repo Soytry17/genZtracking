@@ -13,7 +13,7 @@
  *   first_habit, streak_7/21/66/100, perfect_finish, comeback
  */
 
-import { addDays, isWithinRange } from "@/lib/habits/dates";
+import { addDays, isWithinRange, totalDaysInRange } from "@/lib/habits/dates";
 import type { HabitLogStatus, ISODate } from "@/types/database";
 
 export const XP_PER_DAY = 10;
@@ -181,6 +181,57 @@ export function isPerfectHabit(input: {
     cursor = addDays(cursor, 1);
   }
   return true;
+}
+
+/**
+ * Personal goal badges unlock when every day in the habit range is marked
+ * `done` or `frozen` (skipped / empty days do not count), or when the current
+ * streak already covers the full range.
+ */
+export type GoalBadgeRuleResult = {
+  met: boolean;
+  totalDays: number;
+  filledDays: number;
+  skippedDays: number;
+  remainingDays: number;
+  reason: string;
+};
+
+export function evaluateGoalBadgeRule(input: {
+  start_date: ISODate;
+  end_date: ISODate;
+  logs: readonly { log_date: ISODate; status: HabitLogStatus }[];
+  currentStreak?: number;
+}): GoalBadgeRuleResult {
+  const totalDays = Math.max(1, totalDaysInRange(input.start_date, input.end_date));
+  const filled = new Set<ISODate>();
+  let skippedDays = 0;
+
+  for (const log of input.logs) {
+    if (!isWithinRange(log.log_date, input.start_date, input.end_date)) continue;
+    if (log.status === "done" || log.status === "frozen") {
+      filled.add(log.log_date);
+    } else if (log.status === "skipped") {
+      skippedDays += 1;
+    }
+  }
+
+  const filledDays = filled.size;
+  const remainingDays = Math.max(0, totalDays - filledDays);
+  const streakCoversRange =
+    typeof input.currentStreak === "number" && input.currentStreak >= totalDays;
+  const met = remainingDays === 0 || streakCoversRange;
+
+  let reason: string;
+  if (met) {
+    reason = "Every day in the range is done or frozen. Complete the habit to unlock this badge.";
+  } else if (skippedDays > 0) {
+    reason = `${remainingDays} of ${totalDays} day${totalDays === 1 ? "" : "s"} still open. Skipped days don't count — mark them done or spend a freeze.`;
+  } else {
+    reason = `Finish every day in the range to unlock. ${filledDays} of ${totalDays} counted (done or frozen).`;
+  }
+
+  return { met, totalDays, filledDays, skippedDays, remainingDays, reason };
 }
 
 export function dayXpDedupeKey(habitId: string, date: ISODate): string {

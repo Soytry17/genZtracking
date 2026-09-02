@@ -48,10 +48,10 @@ export function FeatureGrid({ features }: { features: LandingFeature[] }) {
   return (
     <section
       ref={rootRef}
-      className="mx-auto grid w-full max-w-5xl gap-4 px-4 pb-24 sm:grid-cols-2 sm:px-6"
+      className="mx-auto grid w-full max-w-5xl grid-cols-1 gap-4 px-app pb-[max(6rem,calc(4rem+var(--safe-bottom)))] sm:grid-cols-2"
     >
       {features.map((feature) => (
-        <Card key={feature.title} data-hero="feature" className="pointer-events-auto">
+        <Card key={feature.title} data-hero="feature" className="min-w-0">
           <CardBody className="space-y-2">
             <h2 className="text-sm font-semibold tracking-tight text-ink">
               {feature.title}

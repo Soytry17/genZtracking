@@ -59,6 +59,8 @@ Paste these into the SQL editor **in order**, or use the CLI:
    `email_for_username(p_username)`)
 4. `supabase/migrations/0004_username_rpc.sql` — re-asserts those RPC names
    and reloads the PostgREST schema cache
+5. `supabase/migrations/0005_goal_badges.sql` — user-owned goal badges (paste
+   this in the Supabase SQL editor if you are not using the CLI)
 
 ```bash
 npx supabase init          # only if supabase/config.toml does not exist yet
@@ -69,7 +71,8 @@ npx supabase db push
 `0001_init.sql` is idempotent for seed data only — it creates types and tables
 unconditionally, so run it once against a fresh project. `0003_username.sql`
 is safe to re-run (`if not exists` / `create or replace`). `0004_username_rpc.sql`
-is also safe to re-run.
+is also safe to re-run. `0005_goal_badges.sql` is safe to re-run (`if not exists`
+/ `drop policy if exists`).
 
 ### 3. Configure auth
 
@@ -149,7 +152,7 @@ lib/
   env.ts                  environment variable access
   utils.ts                cn()
 types/database.ts         hand-written mirror of the migration
-supabase/migrations/      0001_init.sql, 0002_earn_freeze.sql, 0003_username.sql
+supabase/migrations/      0001_init.sql … 0005_goal_badges.sql
 middleware.ts             refreshes the session, gates protected routes
 ```
 
@@ -164,6 +167,7 @@ middleware.ts             refreshes the session, gates protected routes
 | `freeze_ledger`  | Append-only `delta` rows for earned and spent freezes.                 |
 | `badges`         | Seeded reference data.                                                 |
 | `user_badges`    | Unique on `(user_id, badge_id)`.                                       |
+| `goal_badges`    | User-owned trophies, one per habit. `awarded_at` is set on complete.   |
 | `habit_presets`  | Seeded template library.                                               |
 
 The day grid is **derived** from `start_date..end_date` and left joined against

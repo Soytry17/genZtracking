@@ -21,7 +21,7 @@ export function TodayList({ children }: { children: ReactNode }) {
   );
 
   return (
-    <ul ref={rootRef} className="space-y-3">
+    <ul ref={rootRef} className="grid grid-cols-1 gap-3 lg:grid-cols-2">
       {children}
     </ul>
   );

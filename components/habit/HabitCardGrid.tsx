@@ -30,7 +30,7 @@ export function HabitCardGrid({
   return (
     <div
       ref={rootRef}
-      className={cn("grid gap-4 sm:grid-cols-2", className)}
+      className={cn("grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3", className)}
     >
       {children}
     </div>

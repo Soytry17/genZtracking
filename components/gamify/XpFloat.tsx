@@ -25,7 +25,7 @@ export function XpFloat({
   return (
     <div
       ref={ref}
-      className="pointer-events-none gpu glass-strong fixed right-6 top-24 z-50 rounded-full px-3.5 py-1.5 text-sm font-semibold text-xp"
+      className="pointer-events-none gpu glass-strong fixed right-4 top-[calc(var(--landing-header)+0.75rem)] z-50 rounded-full px-3.5 py-1.5 text-sm font-semibold text-xp md:right-6"
     >
       +{amount} XP
     </div>

@@ -93,7 +93,7 @@ export function DayNoteSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="glass-strong relative z-10 w-full max-h-[85dvh] overflow-y-auto rounded-t-panel p-6 shadow-glass md:max-w-md md:rounded-panel"
+        className="glass-strong relative z-10 w-full max-h-[85dvh] overflow-y-auto rounded-t-panel p-4 pb-[max(1.5rem,var(--safe-bottom))] shadow-glass sm:p-6 md:max-w-md md:rounded-panel md:pb-6"
       >
         <p className="text-xs font-medium uppercase tracking-wider text-ink-subtle">
           Day {day.dayNumber}

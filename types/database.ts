@@ -1,5 +1,6 @@
 /**
- * Hand-written mirror of supabase/migrations/0001_init.sql.
+ * Hand-written mirror of supabase/migrations (0001_init.sql through
+ * 0005_goal_badges.sql).
  *
  * There is no live Supabase project yet, so this file is NOT generated. If you
  * add a migration, update this file in the same commit and keep the shape
@@ -355,6 +356,57 @@ export type Database = {
           },
         ];
       };
+      goal_badges: {
+        Row: {
+          id: string;
+          user_id: string;
+          habit_id: string | null;
+          title: string;
+          description: string | null;
+          icon: string;
+          awarded_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          habit_id?: string | null;
+          title: string;
+          description?: string | null;
+          icon?: string;
+          awarded_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          habit_id?: string | null;
+          title?: string;
+          description?: string | null;
+          icon?: string;
+          awarded_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "goal_badges_habit_id_fkey";
+            columns: ["habit_id"];
+            isOneToOne: true;
+            referencedRelation: "habits";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "goal_badges_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       habit_presets: {
         Row: {
           id: string;
@@ -508,6 +560,9 @@ export type FreezeLedgerEntryInsert = TablesInsert<"freeze_ledger">;
 
 export type Badge = Tables<"badges">;
 export type UserBadge = Tables<"user_badges">;
+export type GoalBadge = Tables<"goal_badges">;
+export type GoalBadgeInsert = TablesInsert<"goal_badges">;
+export type GoalBadgeUpdate = TablesUpdate<"goal_badges">;
 export type HabitPreset = Tables<"habit_presets">;
 
 export type HabitStatus = Enums<"habit_status">;

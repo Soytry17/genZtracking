@@ -2,7 +2,7 @@ import { EmptyState, HabitCardSkeleton } from "@/components/habit/EmptyState";
 
 export default function Loading() {
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
       <HabitCardSkeleton />
       <HabitCardSkeleton />
     </div>

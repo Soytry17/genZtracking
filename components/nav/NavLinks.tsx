@@ -18,16 +18,17 @@ export function NavLinks() {
           <Link
             key={item.href}
             href={item.href}
+            title={item.label}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+              "flex items-center gap-2 rounded-full px-2.5 py-1.5 text-sm font-medium transition-colors lg:px-3",
               active
                 ? "bg-brand-soft text-brand"
                 : "text-ink-muted hover:bg-glass hover:text-ink",
             )}
           >
             {item.icon}
-            {item.label}
+            <span className="sr-only lg:not-sr-only">{item.label}</span>
           </Link>
         );
       })}

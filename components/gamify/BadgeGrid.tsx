@@ -27,7 +27,8 @@ export function BadgeGrid({
       <CardHeader>
         <CardTitle>Badges</CardTitle>
         <CardDescription>
-          {earned.length} of {badges.length} unlocked
+          {earned.length} of {badges.length} unlocked · streak, first habit, and
+          comeback
         </CardDescription>
       </CardHeader>
       <CardBody>
@@ -38,14 +39,14 @@ export function BadgeGrid({
               <li
                 key={badge.id}
                 className={cn(
-                  "rounded-2xl glass-thin p-3",
+                  "min-w-0 rounded-2xl glass-thin p-3",
                   !got && "opacity-45",
                 )}
               >
                 <div className="flex size-9 items-center justify-center rounded-full bg-brand-soft text-brand">
                   <HabitIcon name={badge.icon} />
                 </div>
-                <p className="mt-2 text-sm font-medium text-ink">{badge.name}</p>
+                <p className="mt-2 truncate text-sm font-medium text-ink">{badge.name}</p>
                 <p className="mt-1 text-xs leading-relaxed text-ink-muted">
                   {badge.description}
                 </p>

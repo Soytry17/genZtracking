@@ -33,6 +33,9 @@ export function HabitStatusMenu({
         return;
       }
       report(result.gamify);
+      if (result.data.goalBadgeBlockedReason) {
+        setError(result.data.goalBadgeBlockedReason);
+      }
       router.refresh();
     });
   }
@@ -41,27 +44,27 @@ export function HabitStatusMenu({
     <div className="flex flex-wrap items-center gap-2">
       {status === "active" ? (
         <>
-          <Button size="sm" variant="secondary" disabled={pending} onClick={() => run(() => pauseHabit(habitId))}>
+          <Button size="sm" variant="secondary" disabled={pending} className="h-11 md:h-8" onClick={() => run(() => pauseHabit(habitId))}>
             Pause
           </Button>
-          <Button size="sm" variant="secondary" disabled={pending} onClick={() => run(() => completeHabit(habitId))}>
+          <Button size="sm" variant="secondary" disabled={pending} className="h-11 md:h-8" onClick={() => run(() => completeHabit(habitId))}>
             Complete
           </Button>
-          <Button size="sm" variant="ghost" disabled={pending} onClick={() => run(() => archiveHabit(habitId))}>
+          <Button size="sm" variant="ghost" disabled={pending} className="h-11 md:h-8" onClick={() => run(() => archiveHabit(habitId))}>
             Archive
           </Button>
         </>
       ) : (
-        <Button size="sm" disabled={pending} onClick={() => run(() => restoreHabit(habitId))}>
+        <Button size="sm" disabled={pending} className="h-11 md:h-8" onClick={() => run(() => restoreHabit(habitId))}>
           Restore
         </Button>
       )}
       {status === "paused" ? (
         <>
-          <Button size="sm" variant="secondary" disabled={pending} onClick={() => run(() => completeHabit(habitId))}>
+          <Button size="sm" variant="secondary" disabled={pending} className="h-11 md:h-8" onClick={() => run(() => completeHabit(habitId))}>
             Complete
           </Button>
-          <Button size="sm" variant="ghost" disabled={pending} onClick={() => run(() => archiveHabit(habitId))}>
+          <Button size="sm" variant="ghost" disabled={pending} className="h-11 md:h-8" onClick={() => run(() => archiveHabit(habitId))}>
             Archive
           </Button>
         </>

@@ -89,6 +89,26 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Shared shell metrics. `md` (768px) is the phone → laptop split. */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --app-gutter: 1rem;
+  --app-max: 72rem;
+  --app-header-pad-top: max(0.75rem, var(--safe-top));
+  --app-tabbar-clearance: calc(5.75rem + var(--safe-bottom));
+  --landing-header: calc(3.5rem + var(--app-header-pad-top));
+}
+
+@media (min-width: 768px) {
+  :root {
+    --app-gutter: 1.5rem;
+    --app-tabbar-clearance: 3rem;
+  }
+}
+
 /* ---------- Dark (default) ---------- */
 :root,
 .dark {
@@ -346,6 +366,47 @@
 
   .gpu {
     transform: translateZ(0);
+  }
+
+  /* Horizontal page gutter that respects notches / landscape home indicators. */
+  .px-app {
+    padding-left: max(var(--app-gutter), var(--safe-left));
+    padding-right: max(var(--app-gutter), var(--safe-right));
+  }
+
+  .pt-header {
+    padding-top: var(--app-header-pad-top);
+  }
+
+  .pb-tabbar {
+    padding-bottom: var(--app-tabbar-clearance);
+  }
+
+  /* Week calendar: 44px cells on a phone, fluid 7-col on a laptop. */
+  .day-grid-scroll {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+
+  @media (min-width: 768px) {
+    .day-grid-scroll {
+      overflow-x: visible;
+    }
+  }
+
+  .day-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(2.75rem, 1fr));
+    gap: 0.375rem;
+    min-width: 21.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .day-grid {
+      min-width: 0;
+    }
   }
 
   .habit-card-cv {

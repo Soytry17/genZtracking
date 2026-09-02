@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 
 import { DayGrid } from "@/components/habit/DayGrid";
 import { DayNoteSheet } from "@/components/habit/DayNoteSheet";
+import { GoalBadgeSection } from "@/components/habit/GoalBadgeSection";
 import { HabitIcon } from "@/components/habit/HabitIcon";
 import { HabitStatusMenu } from "@/components/habit/HabitStatusMenu";
 import { ProgressBar } from "@/components/habit/ProgressBar";
@@ -16,16 +17,18 @@ import { FREEZE_RETRO_WINDOW_DAYS, HABIT_STATUS_LABELS } from "@/lib/habits/cons
 import { formatISODate, isWithinRetroWindow } from "@/lib/habits/dates";
 import { progressFromDays } from "@/lib/habits/progress";
 import { Pill } from "@/components/ui";
-import type { Habit, HabitDay } from "@/types/database";
+import type { GoalBadge, Habit, HabitDay } from "@/types/database";
 
 export function HabitPanel({
   habit,
   days,
   freezeTokens,
+  goalBadge,
 }: {
   habit: Habit;
   days: HabitDay[];
   freezeTokens: number;
+  goalBadge: GoalBadge | null;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const { report } = useGamify();
@@ -79,20 +82,22 @@ export function HabitPanel({
   return (
     <div ref={rootRef} className="space-y-8">
       <header data-panel-head className="space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <span className="mt-1 flex size-11 items-center justify-center rounded-2xl glass-thin text-brand">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <span className="mt-1 flex size-11 shrink-0 items-center justify-center rounded-2xl glass-thin text-brand">
               <HabitIcon name={habit.icon} className="size-6" />
             </span>
-            <div>
+            <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-semibold tracking-tight">{habit.title}</h1>
+                <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+                  {habit.title}
+                </h1>
                 {habit.status !== "active" ? (
                   <Pill>{HABIT_STATUS_LABELS[habit.status]}</Pill>
                 ) : null}
               </div>
               {habit.description ? (
-                <p className="mt-1 max-w-xl text-sm text-ink-muted">
+                <p className="mt-1 max-w-xl text-pretty text-sm text-ink-muted">
                   {habit.description}
                 </p>
               ) : null}
@@ -105,7 +110,7 @@ export function HabitPanel({
           <HabitStatusMenu habitId={habit.id} status={habit.status} />
         </div>
 
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
           <StreakBadge current={habit.current_streak} longest={habit.longest_streak} />
           <div className="flex items-center gap-2 text-sm text-ink-muted">
             <FreezeTokens count={freezeTokens} />
@@ -133,6 +138,8 @@ export function HabitPanel({
           </p>
         ) : null}
       </header>
+
+      <GoalBadgeSection habit={habit} days={days} badge={goalBadge} />
 
       <DayGrid
         days={days}

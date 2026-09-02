@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { HabitPanel } from "@/components/habit/HabitPanel";
 import { requireSession } from "@/lib/auth";
 import { buildHabitDays } from "@/lib/habits/dates";
-import { getHabit, getHabitLogs } from "@/lib/habits/queries";
+import { getHabit, getHabitLogs, getGoalBadgeForHabit } from "@/lib/habits/queries";
 
 export const metadata: Metadata = { title: "Habit" };
 
@@ -18,7 +18,10 @@ export default async function HabitDetailPage({
   const habit = await getHabit(user.id, id);
   if (!habit) notFound();
 
-  const logs = await getHabitLogs(habit.id);
+  const [logs, goalBadge] = await Promise.all([
+    getHabitLogs(habit.id),
+    getGoalBadgeForHabit(user.id, habit.id),
+  ]);
   const days = buildHabitDays(habit, logs);
 
   return (
@@ -26,6 +29,7 @@ export default async function HabitDetailPage({
       habit={habit}
       days={days}
       freezeTokens={profile?.freeze_tokens ?? 0}
+      goalBadge={goalBadge}
     />
   );
 }

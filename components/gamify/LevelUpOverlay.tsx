@@ -3,15 +3,21 @@
 import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui";
+import { GoalBadgeIcon } from "@/components/habit/GoalBadgeIcon";
 import { HabitIcon } from "@/components/habit/HabitIcon";
 import { animateLevelUpBurst, killAnime } from "@/lib/anim/anime";
-import type { Badge } from "@/types/database";
+import type { Badge, GoalBadge } from "@/types/database";
+
+type Overlay =
+  | { kind: "level"; level: number }
+  | { kind: "badge"; badge: Badge }
+  | { kind: "goal_badge"; badge: GoalBadge };
 
 export function LevelUpOverlay({
   overlay,
   onClose,
 }: {
-  overlay: { kind: "level"; level: number } | { kind: "badge"; badge: Badge } | null;
+  overlay: Overlay | null;
   onClose: () => void;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -32,11 +38,17 @@ export function LevelUpOverlay({
   if (!overlay) return null;
 
   const title =
-    overlay.kind === "level" ? `Level ${overlay.level}` : overlay.badge.name;
+    overlay.kind === "level"
+      ? `Level ${overlay.level}`
+      : overlay.kind === "goal_badge"
+        ? overlay.badge.title
+        : overlay.badge.name;
   const body =
     overlay.kind === "level"
       ? "The grind is compounding. Keep the streak alive."
-      : overlay.badge.description;
+      : overlay.kind === "goal_badge"
+        ? overlay.badge.description ?? "You finished what you set out to do."
+        : overlay.badge.description;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
@@ -59,7 +71,11 @@ export function LevelUpOverlay({
           />
         ))}
         <div data-level-panel className="relative space-y-3">
-          {overlay.kind === "badge" ? (
+          {overlay.kind === "goal_badge" ? (
+            <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-brand-soft text-brand">
+              <GoalBadgeIcon icon={overlay.badge.icon} className="size-7" />
+            </div>
+          ) : overlay.kind === "badge" ? (
             <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-brand-soft text-brand">
               <HabitIcon name={overlay.badge.icon} className="size-7" />
             </div>

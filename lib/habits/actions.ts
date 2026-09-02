@@ -7,6 +7,7 @@ import { requireUser } from "@/lib/auth";
 import {
   badgesEarnedFor,
   dayXpDedupeKey,
+  evaluateGoalBadgeRule,
   hasComebackStreak,
   isPerfectHabit,
   levelForXp,
@@ -15,14 +16,18 @@ import {
 } from "@/lib/gamify/rules";
 import {
   DAY_NOTE_MAX_LENGTH,
+  DEFAULT_GOAL_BADGE_ICON,
   DEFAULT_HABIT_COLOR,
   DEFAULT_HABIT_ICON,
   FREEZE_RETRO_WINDOW_DAYS,
+  GOAL_BADGE_DESCRIPTION_MAX_LENGTH,
+  GOAL_BADGE_TITLE_MAX_LENGTH,
   HABIT_DESCRIPTION_MAX_LENGTH,
   HABIT_DURATION_MAX_DAYS,
   HABIT_DURATION_MIN_DAYS,
   HABIT_TITLE_MAX_LENGTH,
   ROUTES,
+  isGoalBadgeIcon,
   isHabitColor,
 } from "@/lib/habits/constants";
 import {
@@ -35,6 +40,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import type {
   Badge,
+  GoalBadge,
   Habit,
   HabitLog,
   HabitLogStatus,
@@ -52,7 +58,14 @@ export type GamifyDelta = {
   newLevel: number;
   leveledUp: boolean;
   newBadges: Badge[];
+  newGoalBadges: GoalBadge[];
   freezeTokens: number;
+};
+
+export type SetHabitStatusData = {
+  status: HabitStatus;
+  goalBadgeAwarded: boolean;
+  goalBadgeBlockedReason: string | null;
 };
 
 export type ActionOk<T> = { ok: true; data: T; gamify: GamifyDelta };
@@ -333,6 +346,7 @@ async function captureGamify(
   userId: string,
   previous: Profile | null,
   habitId?: string,
+  extra?: { newGoalBadges?: GoalBadge[] },
 ): Promise<GamifyDelta> {
   const before = previous ?? (await fetchProfile(userId));
   const previousXp = before?.xp ?? 0;
@@ -350,6 +364,7 @@ async function captureGamify(
     newLevel: refreshed.level,
     leveledUp: refreshed.level > previousLevel,
     newBadges,
+    newGoalBadges: extra?.newGoalBadges ?? [],
     freezeTokens: refreshed.freeze_tokens,
   };
 }
@@ -362,6 +377,126 @@ async function currentStreak(habitId: string): Promise<number> {
     .eq("id", habitId)
     .maybeSingle();
   return data?.current_streak ?? 0;
+}
+
+type GoalBadgeFields = {
+  title: string;
+  description: string | null;
+  icon: string;
+};
+
+function parseGoalBadgeFields(formData: FormData): GoalBadgeFields | ActionErr | null {
+  const title = String(formData.get("goal_badge_title") ?? "").trim();
+  if (!title) return null;
+
+  if (title.length > GOAL_BADGE_TITLE_MAX_LENGTH) {
+    return fail(`Keep the badge title under ${GOAL_BADGE_TITLE_MAX_LENGTH} characters.`);
+  }
+
+  const descriptionRaw = String(formData.get("goal_badge_description") ?? "").trim();
+  if (descriptionRaw.length > GOAL_BADGE_DESCRIPTION_MAX_LENGTH) {
+    return fail(
+      `Keep the badge description under ${GOAL_BADGE_DESCRIPTION_MAX_LENGTH} characters.`,
+    );
+  }
+
+  const iconRaw = String(formData.get("goal_badge_icon") ?? "").trim();
+  const icon = isGoalBadgeIcon(iconRaw)
+    ? iconRaw
+    : iconRaw.length > 0 && iconRaw.length <= 32
+      ? iconRaw
+      : DEFAULT_GOAL_BADGE_ICON;
+
+  return {
+    title,
+    description: descriptionRaw || null,
+    icon,
+  };
+}
+
+async function insertGoalBadge(
+  userId: string,
+  habitId: string,
+  fields: GoalBadgeFields,
+): Promise<ActionErr | null> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("goal_badges").insert({
+    user_id: userId,
+    habit_id: habitId,
+    title: fields.title,
+    description: fields.description,
+    icon: fields.icon,
+  });
+  if (error) return fail(error.message);
+  return null;
+}
+
+async function loadGoalBadgeRule(
+  userId: string,
+  habit: Habit,
+): Promise<{ badge: GoalBadge | null; rule: ReturnType<typeof evaluateGoalBadgeRule> }> {
+  const supabase = await createClient();
+  const { data: badgeRow } = await supabase
+    .from("goal_badges")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("habit_id", habit.id)
+    .maybeSingle();
+
+  const { data: logs } = await supabase
+    .from("habit_logs")
+    .select("log_date, status")
+    .eq("habit_id", habit.id);
+
+  const rule = evaluateGoalBadgeRule({
+    start_date: habit.start_date,
+    end_date: habit.end_date,
+    logs: (logs ?? []) as Pick<HabitLog, "log_date" | "status">[],
+    currentStreak: habit.current_streak,
+  });
+
+  return {
+    badge: (badgeRow as GoalBadge | null) ?? null,
+    rule,
+  };
+}
+
+async function maybeAwardGoalBadge(
+  userId: string,
+  habit: Habit,
+  nextStatus: HabitStatus,
+): Promise<{ awarded: GoalBadge | null; blockedReason: string | null }> {
+  const { badge, rule } = await loadGoalBadgeRule(userId, habit);
+  if (!badge || badge.awarded_at) return { awarded: null, blockedReason: null };
+
+  const completing = nextStatus === "completed";
+  const archivingAtGoal = nextStatus === "archived" && rule.met;
+
+  if (!rule.met) {
+    return {
+      awarded: null,
+      blockedReason: completing ? rule.reason : null,
+    };
+  }
+
+  if (!completing && !archivingAtGoal) {
+    return { awarded: null, blockedReason: null };
+  }
+
+  const supabase = await createClient();
+  const { data: updated, error } = await supabase
+    .from("goal_badges")
+    .update({ awarded_at: new Date().toISOString() })
+    .eq("id", badge.id)
+    .is("awarded_at", null)
+    .select("*")
+    .maybeSingle();
+
+  if (error || !updated) {
+    return { awarded: null, blockedReason: null };
+  }
+
+  return { awarded: updated as GoalBadge, blockedReason: null };
 }
 
 export async function createHabit(formData: FormData): Promise<ActionResult<{ id: string }>> {
@@ -403,6 +538,13 @@ export async function createHabit(formData: FormData): Promise<ActionResult<{ id
   if (endDate < startDate) return fail("End date can't be before the start date.");
 
   const color = isHabitColor(colorRaw) ? colorRaw : DEFAULT_HABIT_COLOR;
+  const goalEnabled = String(formData.get("goal_badge_enabled") ?? "") === "1";
+  const goalBadge = parseGoalBadgeFields(formData);
+  if (goalBadge && "ok" in goalBadge) return goalBadge;
+  if (goalEnabled && !goalBadge) {
+    return fail("Give this badge a title, or turn Goal badge off.");
+  }
+
   const previous = await fetchProfile(user.id);
   const supabase = await createClient();
 
@@ -417,11 +559,17 @@ export async function createHabit(formData: FormData): Promise<ActionResult<{ id
       end_date: endDate,
       color,
       icon,
+      status: "active",
     })
     .select("id")
     .single();
 
   if (error || !data) return fail(error?.message ?? "Could not create the habit.");
+
+  if (goalBadge) {
+    const badgeError = await insertGoalBadge(user.id, data.id, goalBadge);
+    if (badgeError) return badgeError;
+  }
 
   await captureGamify(user.id, previous, data.id);
   revalidateHabit(data.id);
@@ -615,7 +763,7 @@ export async function spendFreeze(
 export async function setHabitStatus(
   habitId: string,
   status: HabitStatus,
-): Promise<ActionResult<{ status: HabitStatus }>> {
+): Promise<ActionResult<SetHabitStatusData>> {
   const user = await requireUser();
   const loaded = await loadHabit(habitId, user.id);
   if ("ok" in loaded) return loaded;
@@ -637,25 +785,141 @@ export async function setHabitStatus(
   const { error } = await supabase.from("habits").update(patch).eq("id", habitId);
   if (error) return fail(error.message);
 
-  const gamify = await captureGamify(user.id, previous, habitId);
+  const award = await maybeAwardGoalBadge(user.id, loaded.habit, status);
+  const gamify = await captureGamify(user.id, previous, habitId, {
+    newGoalBadges: award.awarded ? [award.awarded] : [],
+  });
   revalidateHabit(habitId);
-  return { ok: true, data: { status }, gamify };
+  return {
+    ok: true,
+    data: {
+      status,
+      goalBadgeAwarded: Boolean(award.awarded),
+      goalBadgeBlockedReason: award.blockedReason,
+    },
+    gamify,
+  };
 }
 
-export async function archiveHabit(habitId: string): Promise<ActionResult<{ status: HabitStatus }>> {
+export async function archiveHabit(
+  habitId: string,
+): Promise<ActionResult<SetHabitStatusData>> {
   return setHabitStatus(habitId, "archived");
 }
 
-export async function pauseHabit(habitId: string): Promise<ActionResult<{ status: HabitStatus }>> {
+export async function pauseHabit(
+  habitId: string,
+): Promise<ActionResult<SetHabitStatusData>> {
   return setHabitStatus(habitId, "paused");
 }
 
 export async function completeHabit(
   habitId: string,
-): Promise<ActionResult<{ status: HabitStatus }>> {
+  options?: { requireGoal?: boolean },
+): Promise<ActionResult<SetHabitStatusData>> {
+  if (options?.requireGoal) {
+    const user = await requireUser();
+    const loaded = await loadHabit(habitId, user.id);
+    if ("ok" in loaded) return loaded;
+    const { badge, rule } = await loadGoalBadgeRule(user.id, loaded.habit);
+    if (badge && !badge.awarded_at && !rule.met) {
+      return fail(rule.reason);
+    }
+  }
   return setHabitStatus(habitId, "completed");
 }
 
-export async function restoreHabit(habitId: string): Promise<ActionResult<{ status: HabitStatus }>> {
+export async function restoreHabit(
+  habitId: string,
+): Promise<ActionResult<SetHabitStatusData>> {
   return setHabitStatus(habitId, "active");
+}
+
+export async function saveGoalBadge(
+  habitId: string,
+  formData: FormData,
+): Promise<ActionResult<GoalBadge>> {
+  const user = await requireUser();
+  const loaded = await loadHabit(habitId, user.id);
+  if ("ok" in loaded) return loaded;
+
+  const fields = parseGoalBadgeFields(formData);
+  if (!fields) return fail("Give this badge a title.");
+  if ("ok" in fields) return fields;
+
+  const previous = await fetchProfile(user.id);
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("goal_badges")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("habit_id", habitId)
+    .maybeSingle();
+
+  let row: GoalBadge | null = null;
+
+  if (existing?.id) {
+    const { data, error } = await supabase
+      .from("goal_badges")
+      .update({
+        title: fields.title,
+        description: fields.description,
+        icon: fields.icon,
+      })
+      .eq("id", existing.id)
+      .select("*")
+      .single();
+    if (error || !data) return fail(error?.message ?? "Could not update the badge.");
+    row = data as GoalBadge;
+  } else {
+    const { data, error } = await supabase
+      .from("goal_badges")
+      .insert({
+        user_id: user.id,
+        habit_id: habitId,
+        title: fields.title,
+        description: fields.description,
+        icon: fields.icon,
+      })
+      .select("*")
+      .single();
+    if (error || !data) return fail(error?.message ?? "Could not save the badge.");
+    row = data as GoalBadge;
+  }
+
+  const gamify = await captureGamify(user.id, previous, habitId);
+  revalidateHabit(habitId);
+  return { ok: true, data: row, gamify };
+}
+
+export async function deleteGoalBadge(
+  habitId: string,
+): Promise<ActionResult<null>> {
+  const user = await requireUser();
+  const loaded = await loadHabit(habitId, user.id);
+  if ("ok" in loaded) return loaded;
+
+  const previous = await fetchProfile(user.id);
+  const supabase = await createClient();
+
+  const { data: existing } = await supabase
+    .from("goal_badges")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("habit_id", habitId)
+    .maybeSingle();
+
+  const badge = (existing as GoalBadge | null) ?? null;
+  if (!badge) return fail("No goal badge on this habit.");
+  if (badge.awarded_at) {
+    return fail("This badge is already earned. It stays on your profile.");
+  }
+
+  const { error } = await supabase.from("goal_badges").delete().eq("id", badge.id);
+  if (error) return fail(error.message);
+
+  const gamify = await captureGamify(user.id, previous, habitId);
+  revalidateHabit(habitId);
+  return { ok: true, data: null, gamify };
 }

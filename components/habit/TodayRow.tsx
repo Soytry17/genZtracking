@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { animatePress, animateTick, killAnime } from "@/lib/anim/anime";
@@ -9,7 +10,12 @@ import { StreakBadge } from "@/components/habit/StreakBadge";
 import { useGamify } from "@/components/gamify/GamifyProvider";
 import { Button, Card, CardBody, inputClassName } from "@/components/ui";
 import { saveDayNote, skipDay, spendFreeze, toggleDay } from "@/lib/habits/actions";
-import { FREEZE_RETRO_WINDOW_DAYS, HABIT_COLOR_HEX, isHabitColor } from "@/lib/habits/constants";
+import {
+  FREEZE_RETRO_WINDOW_DAYS,
+  HABIT_COLOR_HEX,
+  ROUTES,
+  isHabitColor,
+} from "@/lib/habits/constants";
 import { isWithinRetroWindow, todayISO } from "@/lib/habits/dates";
 import { cn } from "@/lib/utils";
 import type { Habit, HabitLog } from "@/types/database";
@@ -67,7 +73,7 @@ export function TodayRow({
   return (
     <Card data-today-row>
       <CardBody className="space-y-3">
-        <div className="flex items-start gap-3">
+        <div className="flex min-w-0 items-start gap-3">
           <button
             ref={checkRef}
             type="button"
@@ -118,7 +124,14 @@ export function TodayRow({
           </button>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="font-semibold text-ink">{habit.title}</h2>
+              <h2 className="min-w-0 truncate font-semibold text-ink">
+                <Link
+                  href={ROUTES.habit(habit.id)}
+                  className="rounded-sm hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/70"
+                >
+                  {habit.title}
+                </Link>
+              </h2>
               <StreakBadge current={habit.current_streak} size="sm" />
             </div>
             {habit.description ? (
@@ -146,6 +159,7 @@ export function TodayRow({
               size="sm"
               variant="secondary"
               disabled={pending || frozen}
+              className="h-11 flex-1 sm:h-8 sm:flex-none"
               onClick={() => run(() => skipDay(habit.id, today))}
             >
               Skip
@@ -155,6 +169,7 @@ export function TodayRow({
                 size="sm"
                 variant="secondary"
                 disabled={pending}
+                className="h-11 flex-1 sm:h-8 sm:flex-none"
                 onClick={() => run(() => spendFreeze(habit.id, today))}
               >
                 Freeze

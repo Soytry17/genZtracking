@@ -28,7 +28,7 @@ export function XpBar({
 
   return (
     <div
-      className={cn("flex min-w-40 items-center gap-2", className)}
+      className={cn("flex min-w-0 items-center gap-2", className)}
       title={`${progress.xpIntoLevel} / ${progress.xpForNext} XP to level ${progress.level + 1}`}
     >
       <span className="shrink-0 text-xs font-semibold text-xp">

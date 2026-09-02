@@ -23,19 +23,23 @@ export function HabitCard({
     : HABIT_COLOR_HEX.violet;
 
   return (
-    <Link href={ROUTES.habit(habit.id)} className="habit-card-cv block" data-habit-card>
-      <Card className="h-full transition-colors hover:bg-glass-strong">
+    <Link
+      href={ROUTES.habit(habit.id)}
+      className="block min-w-0"
+      data-habit-card
+    >
+      <Card className="h-full transition-colors hover:bg-glass-strong active:bg-glass-strong">
         <CardBody className="space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-3">
               <span
-                className="flex size-10 items-center justify-center rounded-2xl glass-thin"
+                className="flex size-10 shrink-0 items-center justify-center rounded-2xl glass-thin"
                 style={{ color: hex }}
               >
                 <HabitIcon name={habit.icon} />
               </span>
-              <div>
-                <h2 className="font-semibold tracking-tight text-ink">{habit.title}</h2>
+              <div className="min-w-0">
+                <h2 className="truncate font-semibold tracking-tight text-ink">{habit.title}</h2>
                 <p className="text-xs text-ink-muted">
                   {formatISODate(habit.start_date, { month: "short", day: "numeric" })}
                   {" – "}
@@ -43,7 +47,7 @@ export function HabitCard({
                 </p>
               </div>
             </div>
-            <StreakBadge current={habit.current_streak} longest={habit.longest_streak} size="sm" />
+            <StreakBadge current={habit.current_streak} longest={habit.longest_streak} size="sm" className="shrink-0" />
           </div>
 
           <ProgressBar

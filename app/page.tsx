@@ -31,9 +31,9 @@ export default async function LandingPage() {
     <div className="relative min-h-dvh">
       <LandingStars />
 
-      <div className="pointer-events-none relative z-10 [&_a]:pointer-events-auto [&_button]:pointer-events-auto">
-        <header className="sticky top-0 z-30 px-4 pt-3 sm:px-6">
-          <div className="glass-strong pointer-events-auto mx-auto flex h-14 w-full max-w-6xl items-center justify-between rounded-full px-4">
+      <div className="relative z-10">
+        <header className="sticky top-0 z-30 px-app pt-header">
+          <div className="glass-strong mx-auto flex h-14 w-full max-w-6xl items-center justify-between rounded-2xl px-3 sm:rounded-full sm:px-4">
             <span className="text-sm font-semibold tracking-tight">
               genZ<span className="text-brand">tracking</span>
             </span>

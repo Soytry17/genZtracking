@@ -73,7 +73,7 @@ export function DayCell({
       }}
       title={`${day.date}${day.note ? " · has note" : ""}`}
       className={cn(
-        "relative flex aspect-square items-center justify-center rounded-xl text-[11px] font-medium transition-colors",
+        "relative flex aspect-square min-h-11 min-w-11 items-center justify-center rounded-xl text-[11px] font-medium transition-colors",
         day.status === "done" && "text-white",
         day.status === "skipped" && "glass-tile text-ink-subtle",
         day.status === "frozen" && "bg-freeze-soft text-freeze hairline",
