@@ -1,0 +1,162 @@
+"use client";
+
+import { useEffect, useId, useState, useTransition } from "react";
+
+import { Button, inputClassName } from "@/components/ui";
+import { useGamify } from "@/components/gamify/GamifyProvider";
+import {
+  saveDayNote,
+  skipDay,
+  spendFreeze,
+  toggleDay,
+} from "@/lib/habits/actions";
+import { DAY_NOTE_MAX_LENGTH, FREEZE_RETRO_WINDOW_DAYS } from "@/lib/habits/constants";
+import { formatISODate, isWithinRetroWindow } from "@/lib/habits/dates";
+import type { HabitDay } from "@/types/database";
+
+export function DayNoteSheet({
+  day,
+  habitId,
+  freezeTokens,
+  readOnly,
+  onClose,
+}: {
+  day: HabitDay;
+  habitId: string;
+  freezeTokens: number;
+  readOnly?: boolean;
+  onClose: () => void;
+}) {
+  const titleId = useId();
+  const { report } = useGamify();
+  const [note, setNote] = useState(day.note ?? "");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, start] = useTransition();
+
+  useEffect(() => {
+    setNote(day.note ?? "");
+    setError(null);
+  }, [day]);
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  const canFreeze =
+    !readOnly &&
+    !day.status &&
+    !day.isFuture &&
+    freezeTokens > 0 &&
+    isWithinRetroWindow(day.date, FREEZE_RETRO_WINDOW_DAYS);
+
+  function run(fn: () => Promise<{ ok: true; gamify: Parameters<typeof report>[0] } | { ok: false; error: string }>) {
+    start(async () => {
+      const result = await fn();
+      if (!result.ok) {
+        setError(result.error);
+        return;
+      }
+      report(result.gamify);
+      onClose();
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-50">
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/60"
+        aria-label="Close"
+        onClick={onClose}
+      />
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-panel border border-line bg-surface p-5 shadow-glow md:inset-auto md:left-1/2 md:top-1/2 md:w-full md:max-w-md md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-panel"
+      >
+        <p className="text-xs font-medium uppercase tracking-wider text-ink-subtle">
+          Day {day.dayNumber}
+        </p>
+        <h2 id={titleId} className="mt-1 text-lg font-semibold">
+          {formatISODate(day.date, {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+          })}
+        </h2>
+        <p className="mt-1 text-sm text-ink-muted">
+          {day.status ? `Marked ${day.status}` : "Not logged yet"}
+        </p>
+
+        {!readOnly && !day.isFuture ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              disabled={pending || day.status === "frozen"}
+              onClick={() => run(() => toggleDay(habitId, day.date))}
+            >
+              {day.status === "done" ? "Uncheck" : "Mark done"}
+            </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              disabled={pending || day.status === "frozen"}
+              onClick={() => run(() => skipDay(habitId, day.date))}
+            >
+              Skip
+            </Button>
+            {canFreeze ? (
+              <Button
+                size="sm"
+                variant="secondary"
+                disabled={pending}
+                onClick={() => run(() => spendFreeze(habitId, day.date))}
+              >
+                ❄ Freeze
+              </Button>
+            ) : null}
+          </div>
+        ) : null}
+
+        <form
+          className="mt-4 space-y-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (readOnly) return;
+            run(() => saveDayNote(habitId, day.date, note));
+          }}
+        >
+          <label htmlFor="day-note" className="text-xs font-medium text-ink-muted">
+            Note
+          </label>
+          <textarea
+            id="day-note"
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            maxLength={DAY_NOTE_MAX_LENGTH}
+            rows={4}
+            disabled={readOnly || pending || day.isFuture}
+            placeholder="What did you actually do today?"
+            className={`${inputClassName} h-auto py-3`}
+          />
+          {!readOnly && !day.isFuture ? (
+            <Button type="submit" disabled={pending} className="w-full">
+              {pending ? "Saving…" : "Save note"}
+            </Button>
+          ) : null}
+        </form>
+
+        {error ? (
+          <p role="alert" className="mt-3 text-sm text-danger">
+            {error}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}

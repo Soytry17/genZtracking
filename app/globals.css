@@ -1,26 +1,228 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+  Theme is dark-first. `<html>` carries `class="dark"` by default (see app/layout.tsx).
+  Adding `class="light"` instead flips every semantic token below.
+
+  Tailwind v4 is CSS-first: there is no tailwind.config.ts. Add design tokens here.
+*/
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Semantic surfaces */
+  --color-canvas: var(--t-canvas);
+  --color-surface: var(--t-surface);
+  --color-surface-2: var(--t-surface-2);
+  --color-surface-3: var(--t-surface-3);
+  --color-line: var(--t-line);
+  --color-line-strong: var(--t-line-strong);
+
+  /* Semantic text */
+  --color-ink: var(--t-ink);
+  --color-ink-muted: var(--t-ink-muted);
+  --color-ink-subtle: var(--t-ink-subtle);
+
+  /* Brand + state */
+  --color-brand: var(--t-brand);
+  --color-brand-hover: var(--t-brand-hover);
+  --color-brand-soft: var(--t-brand-soft);
+  --color-brand-ink: var(--t-brand-ink);
+  --color-accent: var(--t-accent);
+  --color-accent-soft: var(--t-accent-soft);
+  --color-success: var(--t-success);
+  --color-success-soft: var(--t-success-soft);
+  --color-warning: var(--t-warning);
+  --color-warning-soft: var(--t-warning-soft);
+  --color-danger: var(--t-danger);
+  --color-danger-soft: var(--t-danger-soft);
+
+  /* Domain-specific accents */
+  --color-xp: var(--t-xp);
+  --color-xp-soft: var(--t-xp-soft);
+  --color-freeze: var(--t-freeze);
+  --color-freeze-soft: var(--t-freeze-soft);
+  --color-streak: var(--t-streak);
+
+  /* Day-cell states, used by the habit day grid */
+  --color-day-empty: var(--t-day-empty);
+  --color-day-done: var(--t-day-done);
+  --color-day-skipped: var(--t-day-skipped);
+  --color-day-frozen: var(--t-day-frozen);
+
+  /* Habit palette. `habits.color` stores one of these keys. */
+  --color-habit-violet: #7c5cff;
+  --color-habit-cyan: #22d3ee;
+  --color-habit-emerald: #34d399;
+  --color-habit-amber: #fbbf24;
+  --color-habit-rose: #fb7185;
+  --color-habit-blue: #60a5fa;
+  --color-habit-lime: #a3e635;
+  --color-habit-fuchsia: #e879f9;
+
+  --radius-card: 1rem;
+  --radius-panel: 1.5rem;
+
+  --shadow-glow: 0 0 0 1px var(--t-line), 0 24px 48px -24px rgb(0 0 0 / 0.65);
+  --shadow-card: 0 1px 0 0 var(--t-line-strong) inset, 0 12px 32px -20px rgb(0 0 0 / 0.55);
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ---------- Dark (default) ---------- */
+:root,
+.dark {
+  color-scheme: dark;
+
+  --t-canvas: #08080c;
+  --t-surface: #101018;
+  --t-surface-2: #16161f;
+  --t-surface-3: #1e1e2a;
+  --t-line: rgb(255 255 255 / 0.08);
+  --t-line-strong: rgb(255 255 255 / 0.14);
+
+  --t-ink: #f5f5f8;
+  --t-ink-muted: #a3a3b8;
+  --t-ink-subtle: #6b6b82;
+
+  --t-brand: #7c5cff;
+  --t-brand-hover: #8f74ff;
+  --t-brand-soft: rgb(124 92 255 / 0.16);
+  --t-brand-ink: #ffffff;
+
+  --t-accent: #22d3ee;
+  --t-accent-soft: rgb(34 211 238 / 0.14);
+
+  --t-success: #34d399;
+  --t-success-soft: rgb(52 211 153 / 0.14);
+  --t-warning: #fbbf24;
+  --t-warning-soft: rgb(251 191 36 / 0.14);
+  --t-danger: #fb7185;
+  --t-danger-soft: rgb(251 113 133 / 0.14);
+
+  --t-xp: #fbbf24;
+  --t-xp-soft: rgb(251 191 36 / 0.16);
+  --t-freeze: #7dd3fc;
+  --t-freeze-soft: rgb(125 211 252 / 0.16);
+  --t-streak: #fb923c;
+
+  --t-day-empty: rgb(255 255 255 / 0.05);
+  --t-day-done: #34d399;
+  --t-day-skipped: rgb(255 255 255 / 0.12);
+  --t-day-frozen: #7dd3fc;
+}
+
+/* ---------- Light ---------- */
+.light {
+  color-scheme: light;
+
+  --t-canvas: #f7f7fb;
+  --t-surface: #ffffff;
+  --t-surface-2: #f2f2f7;
+  --t-surface-3: #e8e8f0;
+  --t-line: rgb(9 9 20 / 0.08);
+  --t-line-strong: rgb(9 9 20 / 0.14);
+
+  --t-ink: #12121a;
+  --t-ink-muted: #52526b;
+  --t-ink-subtle: #8a8aa3;
+
+  --t-brand: #6338f5;
+  --t-brand-hover: #5227e8;
+  --t-brand-soft: rgb(99 56 245 / 0.1);
+  --t-brand-ink: #ffffff;
+
+  --t-accent: #0891b2;
+  --t-accent-soft: rgb(8 145 178 / 0.1);
+
+  --t-success: #059669;
+  --t-success-soft: rgb(5 150 105 / 0.1);
+  --t-warning: #d97706;
+  --t-warning-soft: rgb(217 119 6 / 0.1);
+  --t-danger: #e11d48;
+  --t-danger-soft: rgb(225 29 72 / 0.1);
+
+  --t-xp: #d97706;
+  --t-xp-soft: rgb(217 119 6 / 0.12);
+  --t-freeze: #0284c7;
+  --t-freeze-soft: rgb(2 132 199 / 0.12);
+  --t-streak: #ea580c;
+
+  --t-day-empty: rgb(9 9 20 / 0.06);
+  --t-day-done: #059669;
+  --t-day-skipped: rgb(9 9 20 / 0.14);
+  --t-day-frozen: #0284c7;
+}
+
+@layer base {
+  * {
+    border-color: var(--t-line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--t-canvas);
+    color: var(--t-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--t-brand);
+    color: var(--t-brand-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--t-brand);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
+    text-wrap: balance;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer utilities {
+  /* Ambient background wash used by the marketing + auth pages. */
+  .bg-aurora {
+    background-image:
+      radial-gradient(
+        60rem 40rem at 15% -10%,
+        var(--t-brand-soft) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        45rem 35rem at 90% 0%,
+        var(--t-accent-soft) 0%,
+        transparent 55%
+      );
+  }
+
+  .text-gradient-brand {
+    background-image: linear-gradient(
+      100deg,
+      var(--t-ink) 10%,
+      var(--t-brand) 55%,
+      var(--t-accent) 95%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Marker for GSAP targets. Never hide by default — if JS/GSAP never runs,
+     the landing hero (and other animated copy) must still be readable. */
+  .js-anim-hidden {
+    opacity: 1;
+  }
 }
