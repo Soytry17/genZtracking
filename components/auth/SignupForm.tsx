@@ -11,6 +11,7 @@ import {
   USERNAME_HINT,
   parseUsername,
 } from "@/lib/auth-credentials";
+import { getAuthCallbackUrl } from "@/lib/env";
 import { DEFAULT_SIGNED_IN_ROUTE, ROUTES } from "@/lib/habits/constants";
 import { createClient } from "@/lib/supabase/client";
 
@@ -75,6 +76,7 @@ export function SignupForm({ next }: { next: string }) {
       email: trimmedEmail,
       password,
       options: {
+        emailRedirectTo: getAuthCallbackUrl(),
         data: {
           username: parsedUsername,
           display_name: parsedUsername,

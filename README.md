@@ -40,6 +40,14 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_APP_TIME_ZONE=Asia/Phnom_Penh
 ```
 
+On **Vercel** (Project → Settings → Environment Variables), set the production
+origin so confirmation emails never point at localhost. Then **redeploy**
+(`NEXT_PUBLIC_*` is inlined at build time):
+
+```
+NEXT_PUBLIC_SITE_URL=https://gen-ztracking-peach.vercel.app
+```
+
 ### 2. Apply the migrations
 
 Paste these into the SQL editor **in order**, or use the CLI:
@@ -76,11 +84,20 @@ In **Authentication → Providers → Email**:
 
 The Google provider can stay enabled in the dashboard; the app never calls it.
 
-In **Authentication → URL Configuration** (only needed if Confirm email is on):
+In **Authentication → URL Configuration** (required if Confirm email is on):
 
-- Site URL: `http://localhost:3000`
-- Redirect URLs: `http://localhost:3000/auth/callback` (add your production
-  origin too)
+1. Open the [Supabase dashboard](https://supabase.com/dashboard) → your project
+2. **Authentication** → **URL Configuration**
+3. **Site URL:** `https://gen-ztracking-peach.vercel.app`  
+   Confirmation emails use this when the app does not send `emailRedirectTo`.
+   Leave it on localhost and every “Confirm email” click goes to
+   `http://localhost:3000`.
+4. **Redirect URLs** — add both (Save):
+   - `https://gen-ztracking-peach.vercel.app/auth/callback`
+   - `http://localhost:3000/auth/callback`
+
+Emails already sent still contain the old Site URL. Updating this only
+affects **new** confirmation emails.
 
 ### 4. Timezone
 
