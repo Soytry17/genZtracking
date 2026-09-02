@@ -17,11 +17,11 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-panel border border-dashed border-line-strong bg-surface/50 px-6 py-14 text-center",
+        "flex flex-col items-center justify-center rounded-panel glass px-6 py-14 text-center",
         className,
       )}
     >
-      <p className="text-base font-semibold text-ink">{title}</p>
+      <p className="text-base font-semibold tracking-tight text-ink">{title}</p>
       <p className="mt-2 max-w-sm text-sm text-ink-muted">{body}</p>
       {action ? (
         <Link
@@ -38,7 +38,7 @@ export function EmptyState({
 export function Skeleton({ className }: { className?: string }) {
   return (
     <div
-      className={cn("animate-pulse rounded-xl bg-surface-3", className)}
+      className={cn("animate-pulse rounded-2xl bg-glass", className)}
       aria-hidden
     />
   );
@@ -46,7 +46,7 @@ export function Skeleton({ className }: { className?: string }) {
 
 export function HabitCardSkeleton() {
   return (
-    <div className="rounded-card border border-line bg-surface p-5">
+    <div className="rounded-card glass p-6">
       <Skeleton className="h-4 w-24" />
       <Skeleton className="mt-3 h-6 w-40" />
       <Skeleton className="mt-6 h-2 w-full" />
@@ -58,7 +58,7 @@ export function DayGridSkeleton() {
   return (
     <div className="grid grid-cols-7 gap-1.5">
       {Array.from({ length: 28 }).map((_, i) => (
-        <Skeleton key={i} className="aspect-square" />
+        <Skeleton key={i} className="aspect-square rounded-xl" />
       ))}
     </div>
   );

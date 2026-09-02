@@ -1,9 +1,25 @@
-export { useGsap, gsap, ScrollTrigger, prefersReducedMotion, registerGsapPlugins } from "./gsap";
+export {
+  useGsap,
+  gsap,
+  ScrollTrigger,
+  prefersReducedMotion,
+  registerGsapPlugins,
+  enterFromNear,
+  staggerInChunks,
+  driftAurora,
+  applyWillChange,
+  clearWillChange,
+  NEAR_VISIBLE,
+} from "./gsap";
 export {
   animateTick,
   animateProgress,
+  animateCount,
   animateXpFloat,
   animateLevelUpBurst,
   animateFreeze,
+  animateFreezeSpend,
+  animatePress,
+  killAnime,
   animate,
 } from "./anime";

@@ -1,7 +1,7 @@
-import Link from "next/link";
-
+import { FeatureGrid } from "@/components/landing/FeatureGrid";
 import { Hero } from "@/components/landing/Hero";
-import { Card, CardBody, buttonClassName } from "@/components/ui";
+import { LandingStars } from "@/components/landing/LandingStars";
+import { RippleCta } from "@/components/ui/ripple-cta";
 import { getUser } from "@/lib/auth";
 import { DEFAULT_SIGNED_IN_ROUTE, ROUTES } from "@/lib/habits/constants";
 
@@ -28,33 +28,31 @@ export default async function LandingPage() {
   const user = await getUser();
 
   return (
-    <div className="bg-aurora min-h-dvh">
-      <header className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
-        <span className="text-sm font-semibold tracking-tight">
-          genZ<span className="text-brand">tracking</span>
-        </span>
-        <Link
-          href={user ? DEFAULT_SIGNED_IN_ROUTE : ROUTES.login}
-          className={buttonClassName({ variant: "secondary", size: "sm" })}
-        >
-          {user ? "Open app" : "Sign in"}
-        </Link>
-      </header>
+    <div className="relative min-h-dvh">
+      <LandingStars />
 
-      <Hero signedIn={Boolean(user)} />
+      <div className="pointer-events-none relative z-10 [&_a]:pointer-events-auto [&_button]:pointer-events-auto">
+        <header className="sticky top-0 z-30 px-4 pt-3 sm:px-6">
+          <div className="glass-strong pointer-events-auto mx-auto flex h-14 w-full max-w-6xl items-center justify-between rounded-full px-4">
+            <span className="text-sm font-semibold tracking-tight">
+              genZ<span className="text-brand">tracking</span>
+            </span>
+            {user ? (
+              <RippleCta href={DEFAULT_SIGNED_IN_ROUTE} size="sm">
+                Open app
+              </RippleCta>
+            ) : (
+              <RippleCta href={ROUTES.login} tone="secondary" size="sm">
+                Sign in
+              </RippleCta>
+            )}
+          </div>
+        </header>
 
-      <section className="mx-auto grid w-full max-w-5xl gap-4 px-4 pb-24 sm:grid-cols-2 sm:px-6">
-        {FEATURES.map((feature) => (
-          <Card key={feature.title} data-hero="feature">
-            <CardBody className="space-y-2">
-              <h2 className="text-sm font-semibold text-ink">{feature.title}</h2>
-              <p className="text-sm leading-relaxed text-ink-muted">
-                {feature.body}
-              </p>
-            </CardBody>
-          </Card>
-        ))}
-      </section>
+        <Hero signedIn={Boolean(user)} />
+
+        <FeatureGrid features={FEATURES} />
+      </div>
     </div>
   );
 }

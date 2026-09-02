@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { EmptyState } from "@/components/habit/EmptyState";
 import { HabitCard } from "@/components/habit/HabitCard";
+import { HabitCardGrid } from "@/components/habit/HabitCardGrid";
 import { requireSession } from "@/lib/auth";
 import { HABIT_STATUS_LABELS, ROUTES } from "@/lib/habits/constants";
 import { buildHabitDays } from "@/lib/habits/dates";
@@ -48,7 +49,7 @@ export default async function ArchivePage() {
               <h2 className="text-sm font-medium text-ink-muted">
                 {HABIT_STATUS_LABELS[status]}
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <HabitCardGrid>
                 {group.map((habit) => (
                   <HabitCard
                     key={habit.id}
@@ -56,7 +57,7 @@ export default async function ArchivePage() {
                     days={buildHabitDays(habit, logsByHabit.get(habit.id) ?? [])}
                   />
                 ))}
-              </div>
+              </HabitCardGrid>
             </section>
           );
         })

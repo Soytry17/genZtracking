@@ -23,19 +23,19 @@ export function HabitCard({
     : HABIT_COLOR_HEX.violet;
 
   return (
-    <Link href={ROUTES.habit(habit.id)} className="block">
-      <Card className="h-full transition-colors hover:border-line-strong">
+    <Link href={ROUTES.habit(habit.id)} className="habit-card-cv block" data-habit-card>
+      <Card className="h-full transition-colors hover:bg-glass-strong">
         <CardBody className="space-y-4">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
               <span
-                className="flex size-10 items-center justify-center rounded-xl"
-                style={{ backgroundColor: `${hex}22`, color: hex }}
+                className="flex size-10 items-center justify-center rounded-2xl glass-thin"
+                style={{ color: hex }}
               >
                 <HabitIcon name={habit.icon} />
               </span>
               <div>
-                <h2 className="font-semibold text-ink">{habit.title}</h2>
+                <h2 className="font-semibold tracking-tight text-ink">{habit.title}</h2>
                 <p className="text-xs text-ink-muted">
                   {formatISODate(habit.start_date, { month: "short", day: "numeric" })}
                   {" – "}

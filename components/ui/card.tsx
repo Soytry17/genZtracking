@@ -5,10 +5,7 @@ import { cn } from "@/lib/utils";
 export function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn(
-        "rounded-card border border-line bg-surface shadow-card",
-        className,
-      )}
+      className={cn("rounded-card glass shadow-glass", className)}
       {...props}
     />
   );
@@ -20,7 +17,7 @@ export function CardHeader({
 }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex flex-col gap-1 border-b border-line p-5", className)}
+      className={cn("flex flex-col gap-1 border-b border-hairline px-6 py-5", className)}
       {...props}
     />
   );
@@ -29,7 +26,7 @@ export function CardHeader({
 export function CardTitle({ className, ...props }: React.ComponentProps<"h2">) {
   return (
     <h2
-      className={cn("text-base font-semibold text-ink", className)}
+      className={cn("text-base font-semibold tracking-tight text-ink", className)}
       {...props}
     />
   );
@@ -45,13 +42,13 @@ export function CardDescription({
 }
 
 export function CardBody({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("p-5", className)} {...props} />;
+  return <div className={cn("p-6", className)} {...props} />;
 }
 
 type PillTone = "neutral" | "brand" | "success" | "warning" | "danger" | "freeze" | "xp";
 
 const PILL_TONES: Record<PillTone, string> = {
-  neutral: "border-line-strong bg-surface-2 text-ink-muted",
+  neutral: "glass text-ink-muted",
   brand: "border-transparent bg-brand-soft text-brand",
   success: "border-transparent bg-success-soft text-success",
   warning: "border-transparent bg-warning-soft text-warning",

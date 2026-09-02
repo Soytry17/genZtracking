@@ -1,16 +1,18 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+
+import { animatePress, enterFromNear, useGsap } from "@/lib/anim";
 
 import { HabitIcon } from "@/components/habit/HabitIcon";
 import {
-  Button,
   Card,
   CardBody,
   Field,
   Pill,
   inputClassName,
 } from "@/components/ui";
+import { RippleCta } from "@/components/ui/ripple-cta";
 import {
   DEFAULT_HABIT_COLOR,
   DEFAULT_HABIT_ICON,
@@ -40,6 +42,7 @@ async function createHabitAction(
 }
 
 export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const [state, action, pending] = useActionState(createHabitAction, null);
   const today = todayISO();
   const [title, setTitle] = useState("");
@@ -79,6 +82,25 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
     }
   }
 
+  useGsap(
+    rootRef,
+    () => {
+      enterFromNear("[data-form-section]", {
+        y: 12,
+        opacityFrom: 0.8,
+        duration: 0.4,
+        stagger: 0.08,
+      });
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!pending) return;
+    const card = rootRef.current?.querySelector<HTMLElement>("[data-create-card]") ?? null;
+    animatePress(card, 0.985);
+  }, [pending]);
+
   function applyPreset(preset: HabitPreset) {
     setTitle(preset.title);
     setDescription(preset.description ?? "");
@@ -90,9 +112,9 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
   }
 
   return (
-    <div className="space-y-8">
+    <div ref={rootRef} className="space-y-8">
       {categories.length > 0 ? (
-        <section className="space-y-4">
+        <section data-form-section className="space-y-4">
           <div>
             <h2 className="text-sm font-semibold">Start from a template</h2>
             <p className="mt-1 text-sm text-ink-muted">
@@ -110,7 +132,7 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
                     key={preset.id}
                     type="button"
                     onClick={() => applyPreset(preset)}
-                    className="flex items-start gap-3 rounded-xl border border-line bg-surface p-3 text-left transition-colors hover:border-line-strong hover:bg-surface-2"
+                    className="flex items-start gap-3 rounded-2xl glass p-3 text-left transition-colors hover:bg-glass-strong"
                   >
                     <span
                       className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg"
@@ -142,7 +164,7 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
         </section>
       ) : null}
 
-      <Card>
+      <Card data-form-section data-create-card>
         <CardBody>
           <form action={action} className="space-y-5">
             <input type="hidden" name="color" value={color} />
@@ -224,7 +246,7 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
                     "rounded-full border px-2.5 py-1 text-xs",
                     duration === days
                       ? "border-brand bg-brand-soft text-brand"
-                      : "border-line text-ink-muted hover:bg-surface-2",
+                      : "glass text-ink-muted hover:bg-glass-strong",
                   )}
                 >
                   {days}d
@@ -273,7 +295,7 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
                       "flex size-9 items-center justify-center rounded-lg border",
                       icon === key
                         ? "border-brand bg-brand-soft text-brand"
-                        : "border-line text-ink-muted hover:bg-surface-2",
+                        : "glass text-ink-muted hover:bg-glass-strong",
                     )}
                     aria-label={key}
                   >
@@ -292,9 +314,9 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
               </p>
             ) : null}
 
-            <Button type="submit" size="lg" className="w-full" disabled={pending}>
-              {pending ? "Creating…" : "Create habit"}
-            </Button>
+            <RippleCta type="submit" size="lg" className="w-full" disabled={pending}>
+              {pending ? "Building panel…" : "Create habit"}
+            </RippleCta>
           </form>
         </CardBody>
       </Card>

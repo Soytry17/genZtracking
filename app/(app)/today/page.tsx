@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { EmptyState } from "@/components/habit/EmptyState";
+import { TodayList } from "@/components/habit/TodayList";
 import { TodayRow } from "@/components/habit/TodayRow";
 import { requireSession } from "@/lib/auth";
 import { ROUTES } from "@/lib/habits/constants";
@@ -42,13 +43,13 @@ export default async function TodayPage() {
           action={{ href: ROUTES.newHabit, label: "New habit" }}
         />
       ) : (
-        <ul className="space-y-3">
+        <TodayList>
           {items.map(({ habit, log }) => (
             <li key={habit.id}>
               <TodayRow habit={habit} log={log} />
             </li>
           ))}
-        </ul>
+        </TodayList>
       )}
     </div>
   );

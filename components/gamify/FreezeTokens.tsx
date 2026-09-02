@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-import { animateFreeze } from "@/lib/anim/anime";
+import { animateFreeze, animateFreezeSpend } from "@/lib/anim/anime";
 import { FREEZE_MAX_TOKENS } from "@/lib/habits/constants";
 import { cn } from "@/lib/utils";
 
@@ -15,12 +15,26 @@ export function FreezeTokens({
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const clamped = Math.max(0, Math.min(FREEZE_MAX_TOKENS, count));
+  const prevRef = useRef(clamped);
 
   useEffect(() => {
-    const last = rootRef.current?.querySelector<HTMLElement>(
-      `[data-token="${clamped - 1}"]`,
-    );
-    if (last && clamped > 0) animateFreeze(last);
+    const prev = prevRef.current;
+    if (prev === clamped) return;
+    prevRef.current = clamped;
+
+    const root = rootRef.current;
+    if (!root) return;
+
+    if (clamped > prev) {
+      const earned = root.querySelector<HTMLElement>(
+        `[data-token="${clamped - 1}"]`,
+      );
+      if (earned) animateFreeze(earned);
+      return;
+    }
+
+    const spent = root.querySelector<HTMLElement>(`[data-token="${clamped}"]`);
+    if (spent) animateFreezeSpend(spent);
   }, [clamped]);
 
   return (

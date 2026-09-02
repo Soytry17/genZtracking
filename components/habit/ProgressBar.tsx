@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-import { animateProgress } from "@/lib/anim/anime";
+import { animateCount, animateProgress, killAnime } from "@/lib/anim/anime";
 import { cn } from "@/lib/utils";
 
 export function ProgressBar({
@@ -17,23 +17,40 @@ export function ProgressBar({
   barClassName?: string;
 }) {
   const fillRef = useRef<HTMLDivElement>(null);
+  const countRef = useRef<HTMLSpanElement>(null);
+  const prevRef = useRef(0);
   const clamped = Math.max(0, Math.min(100, percent));
 
   useEffect(() => {
-    animateProgress(fillRef.current, clamped, 0);
+    const from = prevRef.current;
+    const fill = animateProgress(fillRef.current, clamped, from);
+    const count = animateCount(countRef.current, clamped, from);
+    prevRef.current = clamped;
+    return () => {
+      killAnime(fill);
+      killAnime(count);
+    };
   }, [clamped]);
 
   return (
     <div className={cn("space-y-1.5", className)}>
       <div className="flex items-center justify-between gap-3 text-xs text-ink-muted">
         {label ? <span>{label}</span> : <span />}
-        <span className="font-medium tabular-nums text-ink">{clamped}%</span>
+        <span
+          ref={countRef}
+          className="font-medium tabular-nums text-ink"
+        >
+          {clamped}%
+        </span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-surface-3">
+      <div className="h-1.5 overflow-hidden rounded-full glass-inset">
         <div
           ref={fillRef}
-          className={cn("h-full rounded-full bg-success", barClassName)}
-          style={{ width: `${clamped}%` }}
+          className={cn(
+            "gpu h-full w-full origin-left rounded-full bg-success",
+            barClassName,
+          )}
+          style={{ transform: `scaleX(${clamped / 100})` }}
         />
       </div>
     </div>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button, Field, inputClassName } from "@/components/ui";
+import { RippleCta } from "@/components/ui/ripple-cta";
 import {
   PASSWORD_MIN_LENGTH,
   USERNAME_HINT,
@@ -138,7 +139,7 @@ export function SignupForm({ next }: { next: string }) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <Field label="Username" htmlFor="username" hint={USERNAME_HINT}>
+      <Field data-auth-field label="Username" htmlFor="username" hint={USERNAME_HINT}>
         <input
           id="username"
           name="username"
@@ -155,7 +156,7 @@ export function SignupForm({ next }: { next: string }) {
         />
       </Field>
 
-      <Field label="Email" htmlFor="email">
+      <Field data-auth-field label="Email" htmlFor="email">
         <input
           id="email"
           name="email"
@@ -170,7 +171,7 @@ export function SignupForm({ next }: { next: string }) {
         />
       </Field>
 
-      <Field label="Password" htmlFor="password">
+      <Field data-auth-field label="Password" htmlFor="password">
         <input
           id="password"
           name="password"
@@ -185,9 +186,15 @@ export function SignupForm({ next }: { next: string }) {
         />
       </Field>
 
-      <Button type="submit" size="lg" className="w-full" disabled={busy}>
+      <RippleCta
+        data-auth-field
+        type="submit"
+        size="lg"
+        className="w-full"
+        disabled={busy}
+      >
         {busy ? "Creating account…" : "Create account"}
-      </Button>
+      </RippleCta>
 
       {status.kind === "error" ? (
         <p

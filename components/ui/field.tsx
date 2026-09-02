@@ -1,9 +1,9 @@
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
 
 export const inputClassName =
-  "h-11 w-full rounded-xl border border-line-strong bg-surface-2 px-3 text-sm text-ink " +
+  "h-11 w-full rounded-2xl glass-inset px-3.5 text-sm text-ink " +
   "placeholder:text-ink-subtle disabled:opacity-50 " +
   "focus:border-brand focus:outline-none";
 
@@ -15,15 +15,16 @@ export function Field({
   hint,
   children,
   className,
+  ...props
 }: {
   label: string;
   htmlFor?: string;
   hint?: string;
   children: ReactNode;
   className?: string;
-}) {
+} & ComponentProps<"div">) {
   return (
-    <div className={cn("space-y-1.5", className)}>
+    <div className={cn("space-y-1.5", className)} {...props}>
       <label htmlFor={htmlFor} className={labelClassName}>
         {label}
       </label>

@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { Button, Field, inputClassName } from "@/components/ui";
+import { Field, inputClassName } from "@/components/ui";
+import { RippleCta } from "@/components/ui/ripple-cta";
 import { looksLikeEmail } from "@/lib/auth-credentials";
 import { DEFAULT_SIGNED_IN_ROUTE, ROUTES } from "@/lib/habits/constants";
 import { createClient } from "@/lib/supabase/client";
@@ -77,7 +78,7 @@ export function LoginForm({
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
-      <Field label="Username or email" htmlFor="identifier">
+      <Field data-auth-field label="Username or email" htmlFor="identifier">
         <input
           id="identifier"
           name="identifier"
@@ -92,7 +93,7 @@ export function LoginForm({
         />
       </Field>
 
-      <Field label="Password" htmlFor="password">
+      <Field data-auth-field label="Password" htmlFor="password">
         <input
           id="password"
           name="password"
@@ -106,9 +107,15 @@ export function LoginForm({
         />
       </Field>
 
-      <Button type="submit" size="lg" className="w-full" disabled={busy}>
+      <RippleCta
+        data-auth-field
+        type="submit"
+        size="lg"
+        className="w-full"
+        disabled={busy}
+      >
         {busy ? "Signing in…" : "Sign in"}
-      </Button>
+      </RippleCta>
 
       {status.kind === "error" ? (
         <p

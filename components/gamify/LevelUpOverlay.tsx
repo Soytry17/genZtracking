@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui";
 import { HabitIcon } from "@/components/habit/HabitIcon";
-import { animateLevelUpBurst } from "@/lib/anim/anime";
+import { animateLevelUpBurst, killAnime } from "@/lib/anim/anime";
 import type { Badge } from "@/types/database";
 
 export function LevelUpOverlay({
@@ -18,12 +18,15 @@ export function LevelUpOverlay({
 
   useEffect(() => {
     if (!overlay) return;
-    animateLevelUpBurst(rootRef.current);
+    const anim = animateLevelUpBurst(rootRef.current);
     function onKey(event: KeyboardEvent) {
       if (event.key === "Escape") onClose();
     }
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      killAnime(anim);
+    };
   }, [overlay, onClose]);
 
   if (!overlay) return null;
@@ -39,19 +42,19 @@ export function LevelUpOverlay({
     <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
       <button
         type="button"
-        className="absolute inset-0 bg-black/70"
+        className="absolute inset-0 bg-black/55"
         aria-label="Dismiss"
         onClick={onClose}
       />
       <div
         ref={rootRef}
-        className="relative w-full max-w-sm overflow-hidden rounded-panel border border-line bg-surface p-8 text-center shadow-glow"
+        className="relative w-full max-w-sm overflow-hidden rounded-panel glass-strong p-8 text-center"
       >
-        {Array.from({ length: 18 }).map((_, i) => (
+        {Array.from({ length: 6 }).map((_, i) => (
           <span
             key={i}
             data-burst
-            className="pointer-events-none absolute left-1/2 top-1/2 size-2 rounded-full bg-xp"
+            className="pointer-events-none absolute left-1/2 top-1/2 size-1.5 rounded-full bg-xp"
             style={{ opacity: 0 }}
           />
         ))}
@@ -65,7 +68,7 @@ export function LevelUpOverlay({
               Level up
             </p>
           )}
-          <h2 className="text-3xl font-semibold text-ink">{title}</h2>
+          <h2 className="text-3xl font-semibold tracking-tight text-ink">{title}</h2>
           <p className="text-sm text-ink-muted">{body}</p>
           <Button className="mt-4" onClick={onClose}>
             Keep going

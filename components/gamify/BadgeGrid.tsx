@@ -38,7 +38,7 @@ export function BadgeGrid({
               <li
                 key={badge.id}
                 className={cn(
-                  "rounded-xl border border-line bg-surface-2 p-3",
+                  "rounded-2xl glass-thin p-3",
                   !got && "opacity-45",
                 )}
               >

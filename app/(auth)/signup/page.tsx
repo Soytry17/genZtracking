@@ -27,7 +27,7 @@ export default async function SignupPage({
       : DEFAULT_SIGNED_IN_ROUTE;
 
   return (
-    <Card className="shadow-glow">
+    <Card data-auth-card className="shadow-glow">
       <CardHeader className="text-center">
         <CardTitle className="text-xl">Create an account</CardTitle>
         <CardDescription>

@@ -2,7 +2,12 @@
 
 import { useEffect, useRef } from "react";
 
-import { animateTick } from "@/lib/anim/anime";
+import {
+  animateFreezeSpend,
+  animatePress,
+  animateTick,
+  killAnime,
+} from "@/lib/anim/anime";
 import { habitColorHex } from "@/lib/habits/constants";
 import { cn } from "@/lib/utils";
 import type { HabitDay } from "@/types/database";
@@ -20,11 +25,29 @@ export function DayCell({
   onSelect: (day: HabitDay) => void;
   onOpenNote: (day: HabitDay) => void;
 }) {
+  const cellRef = useRef<HTMLButtonElement>(null);
   const pathRef = useRef<SVGPathElement>(null);
+  const prevStatus = useRef(day.status);
   const accent = habitColorHex(color);
 
   useEffect(() => {
-    if (day.status === "done") animateTick(pathRef.current);
+    const prev = prevStatus.current;
+    const becameDone = day.status === "done" && prev !== "done";
+    const becameFrozen = day.status === "frozen" && prev !== "frozen";
+    prevStatus.current = day.status;
+
+    const cleanups: Array<() => void> = [];
+    if (becameDone) {
+      const anim = animateTick(pathRef.current);
+      cleanups.push(() => killAnime(anim));
+    }
+    if (becameFrozen) {
+      const anim = animateFreezeSpend(cellRef.current);
+      cleanups.push(() => killAnime(anim));
+    }
+    return () => {
+      for (const stop of cleanups) stop();
+    };
   }, [day.status, day.date]);
 
   const future = day.isFuture;
@@ -33,9 +56,13 @@ export function DayCell({
 
   return (
     <button
+      ref={cellRef}
       type="button"
       data-day-cell
       disabled={!clickable && !day.note}
+      onPointerDown={(event) => {
+        if (clickable && event.button === 0) animatePress(cellRef.current);
+      }}
       onClick={() => {
         if (clickable) onSelect(day);
         else onOpenNote(day);
@@ -46,18 +73,22 @@ export function DayCell({
       }}
       title={`${day.date}${day.note ? " · has note" : ""}`}
       className={cn(
-        "relative flex aspect-square items-center justify-center rounded-lg text-[11px] font-medium transition-colors",
+        "relative flex aspect-square items-center justify-center rounded-xl text-[11px] font-medium transition-colors",
         day.status === "done" && "text-white",
-        day.status === "skipped" && "bg-day-skipped text-ink-subtle",
-        day.status === "frozen" && "bg-freeze-soft text-freeze",
-        !day.status && !future && "bg-day-empty text-ink-muted hover:bg-surface-3",
+        day.status === "skipped" && "glass-tile text-ink-subtle",
+        day.status === "frozen" && "bg-freeze-soft text-freeze hairline",
+        !day.status && !future && "glass-tile text-ink-muted hover:bg-glass",
         future && "bg-transparent text-ink-subtle/50",
-        day.isToday && "ring-2 ring-brand ring-offset-2 ring-offset-canvas",
+        day.isToday && "ring-2 ring-brand/70 ring-offset-2 ring-offset-canvas",
         clickable && "cursor-pointer",
       )}
       style={
         day.status === "done"
-          ? { backgroundColor: accent }
+          ? {
+              backgroundColor: `${accent}33`,
+              color: accent,
+              boxShadow: `inset 0 0 0 1px ${accent}66`,
+            }
           : undefined
       }
     >

@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+
+import { animatePress, animateTick, killAnime } from "@/lib/anim/anime";
 
 import { HabitIcon } from "@/components/habit/HabitIcon";
 import { StreakBadge } from "@/components/habit/StreakBadge";
@@ -20,6 +22,8 @@ export function TodayRow({
   log: HabitLog | null;
 }) {
   const { report } = useGamify();
+  const checkRef = useRef<HTMLButtonElement>(null);
+  const pathRef = useRef<SVGPathElement>(null);
   const [note, setNote] = useState(log?.note ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -32,6 +36,17 @@ export function TodayRow({
   const skipped = log?.status === "skipped";
   const canFreeze =
     !log && freezeEligible(today);
+  const wasDone = useRef(done);
+
+  useEffect(() => {
+    if (!done || wasDone.current) {
+      wasDone.current = done;
+      return;
+    }
+    wasDone.current = done;
+    const anim = animateTick(pathRef.current);
+    return () => killAnime(anim);
+  }, [done]);
 
   function run(
     fn: () => Promise<
@@ -50,24 +65,56 @@ export function TodayRow({
   }
 
   return (
-    <Card>
+    <Card data-today-row>
       <CardBody className="space-y-3">
         <div className="flex items-start gap-3">
           <button
+            ref={checkRef}
             type="button"
             disabled={pending || frozen}
+            onPointerDown={(event) => {
+              if (!pending && !frozen && event.button === 0) {
+                animatePress(checkRef.current);
+              }
+            }}
             onClick={() => run(() => toggleDay(habit.id, today))}
             className={cn(
-              "flex size-12 shrink-0 items-center justify-center rounded-xl border text-lg transition-colors",
-              done && "border-transparent text-white",
-              frozen && "border-freeze bg-freeze-soft text-freeze",
-              skipped && "border-line bg-day-skipped text-ink-subtle",
-              !log && "border-line-strong bg-surface-2 text-ink-muted hover:bg-surface-3",
+              "flex size-12 shrink-0 items-center justify-center rounded-2xl text-lg transition-colors",
+              done && "text-white",
+              frozen && "bg-freeze-soft text-freeze hairline",
+              skipped && "glass-tile text-ink-subtle",
+              !log && "glass-tile text-ink-muted hover:bg-glass",
             )}
-            style={done ? { backgroundColor: hex, borderColor: hex } : undefined}
+            style={
+              done
+                ? {
+                    backgroundColor: `${hex}33`,
+                    color: hex,
+                    boxShadow: `inset 0 0 0 1px ${hex}66`,
+                  }
+                : undefined
+            }
             aria-label={done ? `Uncheck ${habit.title}` : `Check off ${habit.title}`}
           >
-            {done ? "✓" : frozen ? "❄" : skipped ? "—" : <HabitIcon name={habit.icon} />}
+            {done ? (
+              <svg viewBox="0 0 24 24" className="size-5" aria-hidden>
+                <path
+                  ref={pathRef}
+                  d="M5 12.5 9.5 17 19 7"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            ) : frozen ? (
+              "❄"
+            ) : skipped ? (
+              "—"
+            ) : (
+              <HabitIcon name={habit.icon} />
+            )}
           </button>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">

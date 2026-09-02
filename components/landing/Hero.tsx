@@ -1,42 +1,43 @@
 "use client";
 
 import { useRef } from "react";
-import Link from "next/link";
 
-import { buttonClassName } from "@/components/ui";
-import { useGsap } from "@/lib/anim/gsap";
+import { RippleCta } from "@/components/ui/ripple-cta";
+import { useGsap } from "@/lib/anim";
 import { DEFAULT_SIGNED_IN_ROUTE, ROUTES } from "@/lib/habits/constants";
 
 export function Hero({ signedIn }: { signedIn: boolean }) {
   const rootRef = useRef<HTMLElement>(null);
 
   useGsap(rootRef, (gsap) => {
-    const tl = gsap.timeline({ defaults: { ease: "power3.out" } });
+    const tl = gsap.timeline({
+      defaults: { ease: "power3.out", force3D: true },
+    });
     // fromTo (not from): destination is always fully visible. FROM is near-visible
     // so a timeline that never plays still leaves readable copy. Fresh objects per
-    // tween — GSAP mutates vars.
+    // tween — GSAP mutates vars. Transform + opacity only.
     tl.fromTo(
       '[data-hero="eyebrow"]',
-      { y: 10, opacity: 0.55 },
-      { y: 0, opacity: 1, duration: 0.45 },
+      { y: 10, opacity: 0.72 },
+      { y: 0, opacity: 1, duration: 0.4 },
     )
       .fromTo(
-        '[data-hero="headline"]',
-        { y: 16, opacity: 0.55 },
-        { y: 0, opacity: 1, duration: 0.7 },
-        "-=0.2",
+        '[data-hero="line"]',
+        { y: 16, opacity: 0.7 },
+        { y: 0, opacity: 1, duration: 0.62, stagger: 0.08 },
+        "-=0.18",
       )
       .fromTo(
         '[data-hero="subcopy"]',
-        { y: 10, opacity: 0.55 },
-        { y: 0, opacity: 1, duration: 0.5 },
-        "-=0.35",
+        { y: 10, opacity: 0.74 },
+        { y: 0, opacity: 1, duration: 0.46 },
+        "-=0.32",
       )
       .fromTo(
-        '[data-hero="cta"]',
-        { y: 10, opacity: 0.55 },
-        { y: 0, opacity: 1, duration: 0.45 },
-        "-=0.25",
+        '[data-hero="cta-item"]',
+        { y: 10, opacity: 0.75 },
+        { y: 0, opacity: 1, duration: 0.4, stagger: 0.08 },
+        "-=0.22",
       );
   }, []);
 
@@ -44,25 +45,25 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
     <section
       ref={rootRef}
       data-hero
-      className="mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-4xl flex-col items-center justify-center px-4 py-16 text-center sm:px-6"
+      className="relative mx-auto flex min-h-[calc(100dvh-4rem)] w-full max-w-4xl flex-col items-center justify-center px-4 py-16 text-center sm:px-6"
     >
       <p
         data-hero="eyebrow"
-        className="js-anim-hidden text-xs font-medium uppercase tracking-[0.2em] text-ink-subtle"
+        className="js-anim-hidden relative text-xs font-medium uppercase tracking-[0.2em] text-ink-subtle"
       >
         Habit tracking · discipline
       </p>
-      <h1
-        data-hero="headline"
-        className="js-anim-hidden text-gradient-brand mt-5 text-4xl font-semibold leading-[1.05] sm:text-6xl"
-      >
-        Pick the habit.
-        <br />
-        Keep the streak.
+      <h1 className="text-gradient-brand relative mt-5 text-4xl font-semibold leading-[1.05] sm:text-6xl">
+        <span data-hero="line" className="js-anim-hidden block">
+          Pick the habit.
+        </span>
+        <span data-hero="line" className="js-anim-hidden block">
+          Keep the streak.
+        </span>
       </h1>
       <p
         data-hero="subcopy"
-        className="js-anim-hidden mx-auto mt-6 max-w-xl text-base text-ink-muted sm:text-lg"
+        className="js-anim-hidden relative mx-auto mt-6 max-w-xl text-base text-ink-muted sm:text-lg"
       >
         Track a habit day by day until it becomes discipline. One panel, a box
         for every day you committed to, and a streak that only breaks if you
@@ -70,29 +71,29 @@ export function Hero({ signedIn }: { signedIn: boolean }) {
       </p>
       <div
         data-hero="cta"
-        className="js-anim-hidden mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row"
+        className="relative mt-9 flex flex-col items-center justify-center gap-3 rounded-full glass px-3 py-3 pointer-events-auto sm:flex-row sm:px-3.5"
       >
         {signedIn ? (
-          <Link
+          <RippleCta
             href={DEFAULT_SIGNED_IN_ROUTE}
-            className={buttonClassName({ size: "lg" })}
+            size="lg"
+            data-hero="cta-item"
           >
             Go to today
-          </Link>
+          </RippleCta>
         ) : (
           <>
-            <Link
-              href={ROUTES.signup}
-              className={buttonClassName({ size: "lg" })}
-            >
+            <RippleCta href={ROUTES.signup} size="lg" data-hero="cta-item">
               Create account
-            </Link>
-            <Link
+            </RippleCta>
+            <RippleCta
               href={ROUTES.login}
-              className={buttonClassName({ variant: "secondary", size: "lg" })}
+              tone="secondary"
+              size="lg"
+              data-hero="cta-item"
             >
               Sign in
-            </Link>
+            </RippleCta>
           </>
         )}
       </div>

@@ -9,7 +9,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
+    var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   /* Semantic surfaces */
@@ -19,6 +20,9 @@
   --color-surface-3: var(--t-surface-3);
   --color-line: var(--t-line);
   --color-line-strong: var(--t-line-strong);
+  --color-glass: var(--t-glass);
+  --color-glass-strong: var(--t-glass-strong);
+  --color-hairline: var(--t-hairline);
 
   /* Semantic text */
   --color-ink: var(--t-ink);
@@ -30,6 +34,17 @@
   --color-brand-hover: var(--t-brand-hover);
   --color-brand-soft: var(--t-brand-soft);
   --color-brand-ink: var(--t-brand-ink);
+  --color-primary: var(--t-brand);
+  --color-primary-foreground: var(--t-brand-ink);
+  --color-secondary: var(--t-glass-strong);
+  --color-secondary-foreground: var(--t-ink);
+  --color-background: var(--t-canvas);
+  --color-foreground: var(--t-ink);
+  --color-destructive: var(--t-danger);
+  --color-ring: var(--t-brand);
+  --color-input: var(--t-hairline);
+  --color-accent: var(--t-brand-soft);
+  --color-accent-foreground: var(--t-brand);
   --color-accent: var(--t-accent);
   --color-accent-soft: var(--t-accent-soft);
   --color-success: var(--t-success);
@@ -62,11 +77,13 @@
   --color-habit-lime: #a3e635;
   --color-habit-fuchsia: #e879f9;
 
-  --radius-card: 1rem;
-  --radius-panel: 1.5rem;
+  --radius-card: 1.375rem;
+  --radius-panel: 1.75rem;
+  --radius-control: 9999px;
 
-  --shadow-glow: 0 0 0 1px var(--t-line), 0 24px 48px -24px rgb(0 0 0 / 0.65);
-  --shadow-card: 0 1px 0 0 var(--t-line-strong) inset, 0 12px 32px -20px rgb(0 0 0 / 0.55);
+  --shadow-glow: var(--t-glass-shadow);
+  --shadow-card: var(--t-glass-shadow);
+  --shadow-glass: var(--t-glass-shadow);
 
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -78,11 +95,18 @@
   color-scheme: dark;
 
   --t-canvas: #08080c;
-  --t-surface: #101018;
-  --t-surface-2: #16161f;
-  --t-surface-3: #1e1e2a;
-  --t-line: rgb(255 255 255 / 0.08);
-  --t-line-strong: rgb(255 255 255 / 0.14);
+  --t-surface: rgb(255 255 255 / 0.08);
+  --t-surface-2: rgb(255 255 255 / 0.1);
+  --t-surface-3: rgb(255 255 255 / 0.14);
+  --t-line: rgb(255 255 255 / 0.1);
+  --t-line-strong: rgb(255 255 255 / 0.16);
+
+  --t-glass: rgb(255 255 255 / 0.08);
+  --t-glass-strong: rgb(255 255 255 / 0.12);
+  --t-hairline: rgb(255 255 255 / 0.18);
+  --t-glass-inset: rgb(0 0 0 / 0.28);
+  --t-glass-shadow: 0 8px 32px -12px rgb(0 0 0 / 0.5),
+    0 1px 0 0 rgb(255 255 255 / 0.08) inset;
 
   --t-ink: #f5f5f8;
   --t-ink-muted: #a3a3b8;
@@ -92,6 +116,13 @@
   --t-brand-hover: #8f74ff;
   --t-brand-soft: rgb(124 92 255 / 0.16);
   --t-brand-ink: #ffffff;
+  --primary: var(--t-brand);
+  --primary-foreground: var(--t-brand-ink);
+  --secondary: var(--t-glass-strong);
+  --secondary-foreground: var(--t-ink);
+  --foreground: var(--t-ink);
+  --accent-foreground: var(--t-brand);
+  --destructive-foreground: #ffffff;
 
   --t-accent: #22d3ee;
   --t-accent-soft: rgb(34 211 238 / 0.14);
@@ -109,9 +140,9 @@
   --t-freeze-soft: rgb(125 211 252 / 0.16);
   --t-streak: #fb923c;
 
-  --t-day-empty: rgb(255 255 255 / 0.05);
+  --t-day-empty: rgb(255 255 255 / 0.06);
   --t-day-done: #34d399;
-  --t-day-skipped: rgb(255 255 255 / 0.12);
+  --t-day-skipped: rgb(255 255 255 / 0.1);
   --t-day-frozen: #7dd3fc;
 }
 
@@ -119,12 +150,19 @@
 .light {
   color-scheme: light;
 
-  --t-canvas: #f7f7fb;
-  --t-surface: #ffffff;
-  --t-surface-2: #f2f2f7;
-  --t-surface-3: #e8e8f0;
+  --t-canvas: #e8e8f0;
+  --t-surface: rgb(255 255 255 / 0.55);
+  --t-surface-2: rgb(255 255 255 / 0.7);
+  --t-surface-3: rgb(255 255 255 / 0.82);
   --t-line: rgb(9 9 20 / 0.08);
   --t-line-strong: rgb(9 9 20 / 0.14);
+
+  --t-glass: rgb(255 255 255 / 0.55);
+  --t-glass-strong: rgb(255 255 255 / 0.72);
+  --t-hairline: rgb(9 9 20 / 0.12);
+  --t-glass-inset: rgb(9 9 20 / 0.05);
+  --t-glass-shadow: 0 8px 32px -16px rgb(0 0 0 / 0.14),
+    0 1px 0 0 rgb(255 255 255 / 0.7) inset;
 
   --t-ink: #12121a;
   --t-ink-muted: #52526b;
@@ -151,15 +189,15 @@
   --t-freeze-soft: rgb(2 132 199 / 0.12);
   --t-streak: #ea580c;
 
-  --t-day-empty: rgb(9 9 20 / 0.06);
+  --t-day-empty: rgb(9 9 20 / 0.05);
   --t-day-done: #059669;
-  --t-day-skipped: rgb(9 9 20 / 0.14);
+  --t-day-skipped: rgb(9 9 20 / 0.1);
   --t-day-frozen: #0284c7;
 }
 
 @layer base {
   * {
-    border-color: var(--t-line);
+    border-color: var(--t-hairline);
   }
 
   html {
@@ -187,14 +225,40 @@
   h1,
   h2,
   h3 {
-    letter-spacing: -0.02em;
+    letter-spacing: -0.03em;
     text-wrap: balance;
+  }
+
+  /* Pointer on real buttons, button-like inputs, and Animate UI / shadcn
+     Ripple slots (including asChild links). Disabled stays not-allowed. */
+  button,
+  [role="button"],
+  [data-slot="button"],
+  [data-slot="ripple-button"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="reset"] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  input[type="submit"]:disabled,
+  input[type="button"]:disabled,
+  input[type="reset"]:disabled,
+  [role="button"][aria-disabled="true"],
+  [role="button"][data-disabled],
+  [data-slot="button"]:disabled,
+  [data-slot="button"][aria-disabled="true"],
+  [data-slot="ripple-button"]:disabled,
+  [data-slot="ripple-button"][aria-disabled="true"] {
+    cursor: not-allowed;
   }
 }
 
 @layer utilities {
-  /* Ambient background wash used by the marketing + auth pages. */
+  /* Ambient wash. Landing uses the Backseasy night-star field instead. */
   .bg-aurora {
+    background-color: var(--t-canvas);
     background-image:
       radial-gradient(
         60rem 40rem at 15% -10%,
@@ -205,7 +269,32 @@
         45rem 35rem at 90% 0%,
         var(--t-accent-soft) 0%,
         transparent 55%
+      ),
+      radial-gradient(
+        36rem 28rem at 50% 110%,
+        color-mix(in oklab, var(--t-brand) 12%, transparent) 0%,
+        transparent 55%
       );
+  }
+
+  /*
+    Magenta Orb Grid (dark) — PatternCraft
+    https://patterncraft.fun/  id: magenta-orb-grid
+    Official snippet: background #020617 + 40px slate grid + magenta/violet orb.
+    Used as the app/auth canvas behind glass. Static CSS only.
+  */
+  .bg-magenta-orb-grid {
+    background-color: #020617;
+    background-image:
+      linear-gradient(to right, rgba(71, 85, 105, 0.15) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(71, 85, 105, 0.15) 1px, transparent 1px),
+      radial-gradient(
+        circle at 50% 60%,
+        rgba(236, 72, 153, 0.15) 0%,
+        rgba(168, 85, 247, 0.05) 40%,
+        transparent 70%
+      );
+    background-size: 40px 40px, 40px 40px, 100% 100%;
   }
 
   .text-gradient-brand {
@@ -220,9 +309,152 @@
     color: transparent;
   }
 
+  /* 1px iOS-style hairline. */
+  .hairline {
+    border: 1px solid var(--t-hairline);
+  }
+
+  /* Frosted glass panels. Blur is static CSS — never tweened. */
+  .glass {
+    background-color: var(--t-glass);
+    border: 1px solid var(--t-hairline);
+    box-shadow: var(--t-glass-shadow);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    backdrop-filter: blur(20px) saturate(180%);
+  }
+
+  .glass-strong {
+    background-color: var(--t-glass-strong);
+    border: 1px solid var(--t-hairline);
+    box-shadow: var(--t-glass-shadow);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    backdrop-filter: blur(24px) saturate(180%);
+  }
+
+  .glass-inset {
+    background-color: var(--t-glass-inset);
+    border: 1px solid var(--t-hairline);
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / 0.28);
+  }
+
+  /* Small tiles / chips: translucent fill, no live blur (365-cell grids). */
+  .glass-thin,
+  .glass-tile {
+    background-color: color-mix(in oklab, var(--t-glass) 85%, transparent);
+    border: 1px solid var(--t-hairline);
+  }
+
+  .gpu {
+    transform: translateZ(0);
+  }
+
+  .habit-card-cv {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 11rem;
+  }
+
+  /* Animate UI liquid fill — compositor-only (scaleX), no Motion. */
+  .btn-liquid {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+  }
+
+  .btn-liquid::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--t-brand-hover);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.4s var(--ease-out-quint);
+    pointer-events: none;
+  }
+
+  .btn-liquid:hover::after,
+  .btn-liquid:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  /* First-viewport day cells: CSS stagger, visible-first, cap via markup. */
+  .js-cell-enter {
+    animation: cell-enter 0.32s var(--ease-out-quint) both;
+  }
+
+  @keyframes cell-enter {
+    from {
+      opacity: 0.78;
+      transform: translate3d(0, 6px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
   /* Marker for GSAP targets. Never hide by default — if JS/GSAP never runs,
      the landing hero (and other animated copy) must still be readable. */
   .js-anim-hidden {
     opacity: 1;
+  }
+}
+
+@supports not (
+  (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))
+) {
+  .glass {
+    background-color: color-mix(in oklab, var(--t-canvas) 72%, white 12%);
+  }
+
+  .glass-strong {
+    background-color: color-mix(in oklab, var(--t-canvas) 64%, white 16%);
+  }
+
+  .glass-inset,
+  .glass-thin,
+  .glass-tile {
+    background-color: color-mix(in oklab, var(--t-canvas) 80%, white 8%);
+  }
+
+  .light .glass,
+  .light .glass-strong {
+    background-color: color-mix(in oklab, white 88%, var(--t-canvas));
+  }
+}
+
+/* Weaker / no blur on mobile and coarse pointers — live blur on large
+   surfaces is the usual 60fps killer. */
+@media (max-width: 640px), (pointer: coarse) {
+  .glass,
+  .glass-strong {
+    -webkit-backdrop-filter: blur(10px) saturate(140%);
+    backdrop-filter: blur(10px) saturate(140%);
+  }
+
+  .glass-inset,
+  .glass-thin,
+  .glass-tile {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .js-anim-hidden,
+  .js-cell-enter {
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+    animation: none !important;
+  }
+
+  .btn-liquid::after {
+    transition: none;
+    transform: none;
   }
 }

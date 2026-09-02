@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useId, useState, useTransition } from "react";
+import { useEffect, useId, useRef, useState, useTransition } from "react";
+
+import { enterFromNear, useGsap } from "@/lib/anim";
 
 import { Button, inputClassName } from "@/components/ui";
 import { useGamify } from "@/components/gamify/GamifyProvider";
@@ -28,7 +30,20 @@ export function DayNoteSheet({
   onClose: () => void;
 }) {
   const titleId = useId();
+  const panelRef = useRef<HTMLDivElement>(null);
   const { report } = useGamify();
+
+  useGsap(
+    panelRef,
+    () => {
+      enterFromNear(panelRef.current, {
+        y: 28,
+        opacityFrom: 0.88,
+        duration: 0.34,
+      });
+    },
+    [day.date],
+  );
   const [note, setNote] = useState(day.note ?? "");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
@@ -66,18 +81,19 @@ export function DayNoteSheet({
   }
 
   return (
-    <div className="fixed inset-0 z-50">
+    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center">
       <button
         type="button"
-        className="absolute inset-0 bg-black/60"
+        className="absolute inset-0 bg-black/50"
         aria-label="Close"
         onClick={onClose}
       />
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto rounded-t-panel border border-line bg-surface p-5 shadow-glow md:inset-auto md:left-1/2 md:top-1/2 md:w-full md:max-w-md md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-panel"
+        className="glass-strong relative z-10 w-full max-h-[85dvh] overflow-y-auto rounded-t-panel p-6 shadow-glass md:max-w-md md:rounded-panel"
       >
         <p className="text-xs font-medium uppercase tracking-wider text-ink-subtle">
           Day {day.dayNumber}
