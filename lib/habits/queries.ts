@@ -1,7 +1,7 @@
 import { cache } from "react";
 
 import { ACTIVE_HABIT_STATUSES, ARCHIVED_HABIT_STATUSES } from "@/lib/habits/constants";
-import { isWithinRange, todayISO } from "@/lib/habits/dates";
+import { addDays, isWithinRange, todayISO } from "@/lib/habits/dates";
 import { createClient } from "@/lib/supabase/server";
 import type {
   Badge,
@@ -83,24 +83,34 @@ export const getLogsForHabits = cache(
 export type TodayHabit = {
   habit: Habit;
   log: HabitLog | null;
+  yesterdayLog: HabitLog | null;
+  yesterdayDue: boolean;
 };
 
-/** Active habits whose range includes today, with today's log if any. */
+/** Active habits whose range includes today, with today's (and yesterday's) logs. */
 export const getTodayHabits = cache(async (userId: string, today: ISODate = todayISO()) => {
   const habits = await getActiveHabits(userId);
+  const yesterday = addDays(today, -1);
   const due = habits.filter((habit) =>
     isWithinRange(today, habit.start_date, habit.end_date),
   );
 
   const logs = await getLogsForHabits(
     due.map((habit) => habit.id),
-    [today],
+    [today, yesterday],
   );
-  const logByHabit = new Map(logs.map((log) => [log.habit_id, log]));
+  const todayByHabit = new Map<string, HabitLog>();
+  const yesterdayByHabit = new Map<string, HabitLog>();
+  for (const log of logs) {
+    if (log.log_date === today) todayByHabit.set(log.habit_id, log);
+    else if (log.log_date === yesterday) yesterdayByHabit.set(log.habit_id, log);
+  }
 
   return due.map((habit): TodayHabit => ({
     habit,
-    log: logByHabit.get(habit.id) ?? null,
+    log: todayByHabit.get(habit.id) ?? null,
+    yesterdayLog: yesterdayByHabit.get(habit.id) ?? null,
+    yesterdayDue: isWithinRange(yesterday, habit.start_date, habit.end_date),
   }));
 });
 

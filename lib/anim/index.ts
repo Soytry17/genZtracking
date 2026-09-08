@@ -13,6 +13,7 @@ export {
 } from "./gsap";
 export {
   animateTick,
+  animateTickOut,
   animateProgress,
   animateCount,
   animateXpFloat,

@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { FeatureGrid } from "@/components/landing/FeatureGrid";
 import { Hero } from "@/components/landing/Hero";
 import { LandingStars } from "@/components/landing/LandingStars";
@@ -26,6 +28,7 @@ const FEATURES = [
 
 export default async function LandingPage() {
   const user = await getUser();
+  if (user) redirect(DEFAULT_SIGNED_IN_ROUTE);
 
   return (
     <div className="relative min-h-dvh">
@@ -37,19 +40,13 @@ export default async function LandingPage() {
             <span className="text-sm font-semibold tracking-tight">
               genZ<span className="text-brand">tracking</span>
             </span>
-            {user ? (
-              <RippleCta href={DEFAULT_SIGNED_IN_ROUTE} size="sm">
-                Open app
-              </RippleCta>
-            ) : (
-              <RippleCta href={ROUTES.login} tone="secondary" size="sm">
-                Sign in
-              </RippleCta>
-            )}
+            <RippleCta href={ROUTES.login} tone="secondary" size="sm">
+              Sign in
+            </RippleCta>
           </div>
         </header>
 
-        <Hero signedIn={Boolean(user)} />
+        <Hero signedIn={false} />
 
         <FeatureGrid features={FEATURES} />
       </div>

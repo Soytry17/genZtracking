@@ -1,6 +1,6 @@
 /**
  * Hand-written mirror of supabase/migrations (0001_init.sql through
- * 0005_goal_badges.sql).
+ * 0006_daily_tasks.sql).
  *
  * There is no live Supabase project yet, so this file is NOT generated. If you
  * add a migration, update this file in the same commit and keep the shape
@@ -407,6 +407,50 @@ export type Database = {
           },
         ];
       };
+      daily_tasks: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string | null;
+          priority: Database["public"]["Enums"]["task_priority"];
+          importance: Database["public"]["Enums"]["task_importance"];
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          description?: string | null;
+          priority?: Database["public"]["Enums"]["task_priority"];
+          importance?: Database["public"]["Enums"]["task_importance"];
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string | null;
+          priority?: Database["public"]["Enums"]["task_priority"];
+          importance?: Database["public"]["Enums"]["task_importance"];
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "daily_tasks_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       habit_presets: {
         Row: {
           id: string;
@@ -507,6 +551,8 @@ export type Database = {
         | "habit_completed"
         | "comeback"
         | "level";
+      task_priority: "urgent" | "high" | "medium" | "low";
+      task_importance: "important" | "not_important";
     };
     CompositeTypes: {
       spend_freeze_result: {
@@ -565,11 +611,17 @@ export type GoalBadgeInsert = TablesInsert<"goal_badges">;
 export type GoalBadgeUpdate = TablesUpdate<"goal_badges">;
 export type HabitPreset = Tables<"habit_presets">;
 
+export type DailyTask = Tables<"daily_tasks">;
+export type DailyTaskInsert = TablesInsert<"daily_tasks">;
+export type DailyTaskUpdate = TablesUpdate<"daily_tasks">;
+
 export type HabitStatus = Enums<"habit_status">;
 export type HabitLogStatus = Enums<"habit_log_status">;
 export type XpEventKind = Enums<"xp_event_kind">;
 export type FreezeReason = Enums<"freeze_reason">;
 export type BadgeKind = Enums<"badge_kind">;
+export type TaskPriority = Enums<"task_priority">;
+export type TaskImportance = Enums<"task_importance">;
 
 export type SpendFreezeResult = CompositeTypes<"spend_freeze_result">;
 

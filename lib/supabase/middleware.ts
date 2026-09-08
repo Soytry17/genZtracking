@@ -75,6 +75,13 @@ export async function updateSession(request: NextRequest) {
     return copyCookies(response, NextResponse.redirect(redirectUrl));
   }
 
+  if (user && pathname === "/") {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/today";
+    redirectUrl.search = "";
+    return copyCookies(response, NextResponse.redirect(redirectUrl));
+  }
+
   return response;
 }
 

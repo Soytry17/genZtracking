@@ -195,7 +195,7 @@ export const ROUTES = {
   profile: "/profile",
 } as const;
 
-/** Where a signed-in user lands by default. */
+/** Home after login / signup, and for signed-in visits to `/`. */
 export const DEFAULT_SIGNED_IN_ROUTE: string = ROUTES.today;
 
 export type DateRange = { start_date: ISODate; end_date: ISODate };

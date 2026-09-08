@@ -6,6 +6,7 @@ export type NavItem = {
   href: string;
   label: string;
   icon: ReactNode;
+  primary?: boolean;
 };
 
 const iconProps = {
@@ -24,6 +25,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     href: ROUTES.today,
     label: "Today",
+    primary: true,
     icon: (
       <svg {...iconProps}>
         <path d="M9 12.5l2 2 4.5-4.5" />

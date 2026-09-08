@@ -10,7 +10,7 @@ export function EmptyState({
   className,
 }: {
   title: string;
-  body: string;
+  body?: string;
   action?: { href: string; label: string };
   className?: string;
 }) {
@@ -22,11 +22,13 @@ export function EmptyState({
       )}
     >
       <p className="text-base font-semibold tracking-tight text-ink">{title}</p>
-      <p className="mt-2 max-w-sm text-sm text-ink-muted">{body}</p>
+      {body ? (
+        <p className="mt-2 max-w-sm text-sm text-ink-muted">{body}</p>
+      ) : null}
       {action ? (
         <Link
           href={action.href}
-          className={buttonClassName({ className: "mt-6" })}
+          className={buttonClassName({ className: "mt-6 min-h-11" })}
         >
           {action.label}
         </Link>

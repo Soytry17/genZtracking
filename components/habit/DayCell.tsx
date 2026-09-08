@@ -2,10 +2,10 @@
 
 import { useEffect, useRef } from "react";
 
+import { CheckIcon } from "@/components/habit/CheckIcon";
 import {
   animateFreezeSpend,
   animatePress,
-  animateTick,
   killAnime,
 } from "@/lib/anim/anime";
 import { habitColorHex } from "@/lib/habits/constants";
@@ -26,32 +26,22 @@ export function DayCell({
   onOpenNote: (day: HabitDay) => void;
 }) {
   const cellRef = useRef<HTMLButtonElement>(null);
-  const pathRef = useRef<SVGPathElement>(null);
   const prevStatus = useRef(day.status);
   const accent = habitColorHex(color);
 
   useEffect(() => {
     const prev = prevStatus.current;
-    const becameDone = day.status === "done" && prev !== "done";
     const becameFrozen = day.status === "frozen" && prev !== "frozen";
     prevStatus.current = day.status;
 
-    const cleanups: Array<() => void> = [];
-    if (becameDone) {
-      const anim = animateTick(pathRef.current);
-      cleanups.push(() => killAnime(anim));
-    }
-    if (becameFrozen) {
-      const anim = animateFreezeSpend(cellRef.current);
-      cleanups.push(() => killAnime(anim));
-    }
-    return () => {
-      for (const stop of cleanups) stop();
-    };
+    if (!becameFrozen) return;
+    const anim = animateFreezeSpend(cellRef.current);
+    return () => killAnime(anim);
   }, [day.status, day.date]);
 
   const future = day.isFuture;
   const frozen = day.status === "frozen";
+  const done = day.status === "done";
   const clickable = !disabled && !future && !frozen;
 
   return (
@@ -74,16 +64,16 @@ export function DayCell({
       title={`${day.date}${day.note ? " · has note" : ""}`}
       className={cn(
         "relative flex aspect-square min-h-11 min-w-11 items-center justify-center rounded-xl text-[11px] font-medium transition-colors",
-        day.status === "done" && "text-white",
+        done && "text-white",
         day.status === "skipped" && "glass-tile text-ink-subtle",
-        day.status === "frozen" && "bg-freeze-soft text-freeze hairline",
+        frozen && "bg-freeze-soft text-freeze hairline",
         !day.status && !future && "glass-tile text-ink-muted hover:bg-glass",
         future && "bg-transparent text-ink-subtle/50",
         day.isToday && "ring-2 ring-brand/70 ring-offset-2 ring-offset-canvas",
         clickable && "cursor-pointer",
       )}
       style={
-        day.status === "done"
+        done
           ? {
               backgroundColor: `${accent}33`,
               color: accent,
@@ -92,24 +82,17 @@ export function DayCell({
           : undefined
       }
     >
-      {day.status === "done" ? (
-        <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
-          <path
-            ref={pathRef}
-            d="M5 12.5 9.5 17 19 7"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.4"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      ) : day.status === "frozen" ? (
+      {frozen ? (
         <span aria-hidden>❄</span>
-      ) : day.status === "skipped" ? (
-        <span aria-hidden>—</span>
       ) : (
-        <span>{day.dayNumber}</span>
+        <>
+          {done ? null : day.status === "skipped" ? (
+            <span aria-hidden>—</span>
+          ) : (
+            <span>{day.dayNumber}</span>
+          )}
+          <CheckIcon active={done} className="size-4" />
+        </>
       )}
       {day.note ? (
         <span className="absolute bottom-1 right-1 size-1.5 rounded-full bg-ink/80" />

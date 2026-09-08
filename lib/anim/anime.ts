@@ -1,6 +1,6 @@
 "use client";
 
-import { animate, type AnimationParams, type JSAnimation } from "animejs";
+import { animate, createDrawable, type AnimationParams } from "animejs";
 
 import { prefersReducedMotion } from "@/lib/anim/gsap";
 
@@ -22,7 +22,9 @@ function asElements(target: Target | null): HTMLElement[] {
   return [];
 }
 
-export function killAnime(anim: JSAnimation | null | undefined) {
+type AnimeHandle = { pause: () => unknown };
+
+export function killAnime(anim: AnimeHandle | null | undefined) {
   anim?.pause();
 }
 
@@ -48,25 +50,162 @@ function run(target: Target, params: AnimationParams) {
   return animate(target, withWillChange(target, params));
 }
 
-/** Checkbox tick: draw an SVG path from nothing to complete. */
-export function animateTick(path: SVGGeometryElement | null) {
-  if (!path) return null;
-  const length = path.getTotalLength();
-  path.style.strokeDasharray = `${length}`;
-  path.style.strokeDashoffset = `${length}`;
-  if (prefersReducedMotion()) {
+function revealTick(
+  path: SVGGeometryElement | null,
+  wrap: HTMLElement | null,
+) {
+  if (path) {
+    path.style.strokeDasharray = "none";
     path.style.strokeDashoffset = "0";
+    path.style.willChange = "auto";
+    try {
+      path.setAttribute("stroke-dasharray", "none");
+      path.setAttribute("stroke-dashoffset", "0");
+    } catch {
+      /* SVG may already be detached */
+    }
+  }
+  if (wrap) {
+    wrap.style.opacity = "1";
+    wrap.style.transform = "none";
+    wrap.style.willChange = "auto";
+  }
+}
+
+function bundle(handles: AnimeHandle[]): AnimeHandle {
+  return {
+    pause() {
+      for (const handle of handles) handle.pause();
+    },
+  };
+}
+
+const TICK_IN_MS = 320;
+const TICK_OUT_MS = 200;
+
+/**
+ * Check-in: SVG path draw + scale pop (0.4 → 1 with outBack overshoot).
+ * Visible-first — if motion is reduced or the tween never plays, the check stays fully drawn.
+ */
+export function animateTick(
+  path: SVGGeometryElement | null,
+  wrap?: HTMLElement | null,
+) {
+  if (!path && !wrap) return null;
+
+  const reveal = () => revealTick(path, wrap ?? null);
+
+  if (prefersReducedMotion()) {
+    reveal();
     return null;
   }
-  path.style.willChange = "stroke-dashoffset";
-  return animate(path, {
-    strokeDashoffset: 0,
-    duration: 420,
-    ease: "outQuad",
-    onComplete() {
-      path.style.willChange = "auto";
+
+  const handles: AnimeHandle[] = [];
+
+  try {
+    if (wrap) {
+      wrap.style.willChange = "transform, opacity";
+      const pop = animate(wrap, {
+        scale: [0.4, 1],
+        opacity: [0.92, 1],
+        duration: TICK_IN_MS,
+        ease: "outBack",
+        onComplete() {
+          wrap.style.transform = "none";
+          wrap.style.willChange = "auto";
+        },
+      });
+      handles.push(pop);
+    }
+
+    if (path) {
+      const [drawable] = createDrawable(path, 0, 1);
+      path.style.willChange = "stroke-dashoffset";
+      const draw = animate(drawable, {
+        draw: ["0 0", "0 1"],
+        duration: TICK_IN_MS,
+        ease: "outQuad",
+        onComplete: reveal,
+      });
+      handles.push(draw);
+    }
+  } catch {
+    reveal();
+    return null;
+  }
+
+  if (handles.length === 0) {
+    reveal();
+    return null;
+  }
+
+  return {
+    pause() {
+      for (const handle of handles) handle.pause();
+      reveal();
     },
-  });
+  };
+}
+
+/** Check-out: reverse the path draw and fade/scale down quickly. */
+export function animateTickOut(
+  path: SVGGeometryElement | null,
+  wrap: HTMLElement | null,
+  onDone?: () => void,
+) {
+  const finish = () => {
+    if (wrap) {
+      wrap.style.opacity = "0";
+      wrap.style.willChange = "auto";
+    }
+    if (path) path.style.willChange = "auto";
+    onDone?.();
+  };
+
+  if (prefersReducedMotion()) {
+    finish();
+    return null;
+  }
+
+  const handles: AnimeHandle[] = [];
+
+  try {
+    if (path) {
+      const [drawable] = createDrawable(path, 0, 1);
+      drawable.setAttribute("draw", "0 1");
+      path.style.willChange = "stroke-dashoffset";
+      const drawParams: AnimationParams = {
+        draw: ["0 1", "0 0"],
+        duration: TICK_OUT_MS,
+        ease: "inQuad",
+      };
+      if (!wrap) drawParams.onComplete = finish;
+      handles.push(animate(drawable, drawParams));
+    }
+
+    if (wrap) {
+      wrap.style.willChange = "transform, opacity";
+      handles.push(
+        animate(wrap, {
+          scale: [1, 0.55],
+          opacity: [1, 0],
+          duration: TICK_OUT_MS,
+          ease: "inQuad",
+          onComplete: finish,
+        }),
+      );
+    }
+  } catch {
+    finish();
+    return null;
+  }
+
+  if (handles.length === 0) {
+    finish();
+    return null;
+  }
+
+  return bundle(handles);
 }
 
 /**

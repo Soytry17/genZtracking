@@ -21,10 +21,13 @@ export function NavLinks() {
             title={item.label}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-2 rounded-full px-2.5 py-1.5 text-sm font-medium transition-colors lg:px-3",
+              "flex items-center gap-2 rounded-full px-2.5 py-1.5 text-sm transition-colors lg:px-3",
+              item.primary ? "font-semibold" : "font-medium",
               active
                 ? "bg-brand-soft text-brand"
-                : "text-ink-muted hover:bg-glass hover:text-ink",
+                : item.primary
+                  ? "text-ink hover:bg-glass"
+                  : "text-ink-muted hover:bg-glass hover:text-ink",
             )}
           >
             {item.icon}

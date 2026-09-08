@@ -61,6 +61,8 @@ Paste these into the SQL editor **in order**, or use the CLI:
    and reloads the PostgREST schema cache
 5. `supabase/migrations/0005_goal_badges.sql` — user-owned goal badges (paste
    this in the Supabase SQL editor if you are not using the CLI)
+6. `supabase/migrations/0006_daily_tasks.sql` — daily priority tasks (paste
+   this in the Supabase SQL editor after 0005, or `npx supabase db push`)
 
 ```bash
 npx supabase init          # only if supabase/config.toml does not exist yet
@@ -72,7 +74,8 @@ npx supabase db push
 unconditionally, so run it once against a fresh project. `0003_username.sql`
 is safe to re-run (`if not exists` / `create or replace`). `0004_username_rpc.sql`
 is also safe to re-run. `0005_goal_badges.sql` is safe to re-run (`if not exists`
-/ `drop policy if exists`).
+/ `drop policy if exists`). `0006_daily_tasks.sql` is safe to re-run (`if not exists`
+/ `drop policy if exists` / enum `duplicate_object` guards).
 
 ### 3. Configure auth
 
@@ -139,6 +142,7 @@ components/
   auth/                   LoginForm, SignupForm
   landing/                GSAP hero
   habit/                  panel, day grid, create form, today rows
+  task/                   Today priority board, cards, edit sheet
   gamify/                 XP bar, freeze tokens, badges, level-up overlay
 lib/
   supabase/               browser, server and middleware clients
@@ -146,13 +150,14 @@ lib/
   habits/constants.ts     freeze rules, palettes, limits, route map
   habits/actions.ts       server actions for habits, logs, freezes, archive
   habits/queries.ts       cached reads
+  tasks/                  daily_tasks actions, queries, priority constants
   gamify/rules.ts         XP, levels, badge qualification
   anim/                   GSAP context hook + anime.js helpers
   auth.ts                 requireUser / requireSession / getProfile
   env.ts                  environment variable access
   utils.ts                cn()
 types/database.ts         hand-written mirror of the migration
-supabase/migrations/      0001_init.sql … 0005_goal_badges.sql
+supabase/migrations/      0001_init.sql … 0006_daily_tasks.sql
 middleware.ts             refreshes the session, gates protected routes
 ```
 
@@ -169,11 +174,19 @@ middleware.ts             refreshes the session, gates protected routes
 | `user_badges`    | Unique on `(user_id, badge_id)`.                                       |
 | `goal_badges`    | User-owned trophies, one per habit. `awarded_at` is set on complete.   |
 | `habit_presets`  | Seeded template library.                                               |
+| `daily_tasks`    | One row per task until ticked. Incomplete tasks roll over; no clone.   |
 
 The day grid is **derived** from `start_date..end_date` and left joined against
 `habit_logs` at read time. No row is created per day, so a 365-day habit costs
 zero rows until days are actually checked off. Use
 `buildHabitDays()` from `lib/habits/dates.ts` for that join.
+
+`daily_tasks` live on **Today**, above habit check-in. Four columns are the four
+priorities (`urgent` red, `high` yellow, `medium` green, `low` gray). Importance
+is a badge on the card, not a column. Dragging a card into another column updates
+`priority` only. Open rows (`completed_at is null`) stay on the board until
+ticked and roll into the next day without cloning. "Done today" is
+`completed_at` on the Phnom Penh calendar date (`app_today()` / `todayISO()`).
 
 Every user-owned table has RLS with `auth.uid() = user_id`. `badges` and
 `habit_presets` are world-readable and have no writer policy.

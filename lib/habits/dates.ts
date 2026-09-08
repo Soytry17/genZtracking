@@ -78,6 +78,61 @@ export function todayISO(timeZone: string = APP_TIME_ZONE): ISODate {
   return toISODate(new Date(), timeZone);
 }
 
+/**
+ * Offset of `timeZone` at `instant`: local clock minus UTC, in milliseconds.
+ * Asia/Phnom_Penh is always +07:00 (no DST); the lookup stays general.
+ */
+function timeZoneOffsetMs(instant: Date, timeZone: string): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(instant);
+
+  const lookup = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value ?? "0");
+
+  const asUtc = Date.UTC(
+    lookup("year"),
+    lookup("month") - 1,
+    lookup("day"),
+    lookup("hour"),
+    lookup("minute"),
+    lookup("second"),
+  );
+  return asUtc - instant.getTime();
+}
+
+/**
+ * Instant when `date` begins in the app timezone, as a UTC `Date`.
+ * Use this to query `timestamptz` columns against a Phnom Penh calendar day.
+ */
+export function startOfAppDay(
+  date: ISODate,
+  timeZone: string = APP_TIME_ZONE,
+): Date {
+  assertISODate(date);
+  let utc = Date.parse(`${date}T00:00:00.000Z`);
+  for (let i = 0; i < 3; i++) {
+    const offset = timeZoneOffsetMs(new Date(utc), timeZone);
+    utc = Date.parse(`${date}T00:00:00.000Z`) - offset;
+  }
+  return new Date(utc);
+}
+
+/** UTC ISO 8601 string for {@link startOfAppDay}. */
+export function startOfAppDayIso(
+  date: ISODate,
+  timeZone: string = APP_TIME_ZONE,
+): string {
+  return startOfAppDay(date, timeZone).toISOString();
+}
+
 /** Shifts an ISO date by whole days. Negative values go backwards. */
 export function addDays(date: ISODate, amount: number): ISODate {
   const shifted = new Date(fromISODate(date).getTime() + amount * MS_PER_DAY);

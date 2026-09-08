@@ -1,28 +1,78 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 
-import { enterFromNear, useGsap } from "@/lib/anim";
+import { TodayRow } from "@/components/habit/TodayRow";
+import type { TodayHabit } from "@/lib/habits/queries";
 
-export function TodayList({ children }: { children: ReactNode }) {
-  const rootRef = useRef<HTMLUListElement>(null);
+export function TodayList({
+  items,
+  freezeTokens,
+}: {
+  items: TodayHabit[];
+  freezeTokens: number;
+}) {
+  const [tokens, setTokens] = useState(freezeTokens);
 
-  useGsap(
-    rootRef,
-    () => {
-      enterFromNear("[data-today-row]", {
-        y: 10,
-        opacityFrom: 0.8,
-        duration: 0.38,
-        stagger: 0.06,
-      });
-    },
-    [],
-  );
+  useEffect(() => {
+    setTokens(freezeTokens);
+  }, [freezeTokens]);
+
+  const open = items.filter((item) => item.log?.status !== "done");
+  const done = items.filter((item) => item.log?.status === "done");
 
   return (
-    <ul ref={rootRef} className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-      {children}
+    <ul className="flex flex-col gap-3">
+      {open.map((item) => (
+        <li key={item.habit.id} className="min-w-0">
+          <Row
+            item={item}
+            freezeTokens={tokens}
+            onFreezeSpent={(spent) =>
+              setTokens((count) => Math.max(0, count + (spent ? -1 : 1)))
+            }
+          />
+        </li>
+      ))}
+
+      {done.length > 0 ? (
+        <li className="pt-2">
+          <p className="text-sm text-ink-muted">Done</p>
+        </li>
+      ) : null}
+
+      {done.map((item) => (
+        <li key={item.habit.id} className="min-w-0">
+          <Row
+            item={item}
+            freezeTokens={tokens}
+            onFreezeSpent={(spent) =>
+              setTokens((count) => Math.max(0, count + (spent ? -1 : 1)))
+            }
+          />
+        </li>
+      ))}
     </ul>
+  );
+}
+
+function Row({
+  item,
+  freezeTokens,
+  onFreezeSpent,
+}: {
+  item: TodayHabit;
+  freezeTokens: number;
+  onFreezeSpent: (spent: boolean) => void;
+}) {
+  return (
+    <TodayRow
+      habit={item.habit}
+      log={item.log}
+      yesterdayDue={item.yesterdayDue}
+      yesterdayLog={item.yesterdayLog}
+      freezeTokens={freezeTokens}
+      onFreezeSpent={onFreezeSpent}
+    />
   );
 }
