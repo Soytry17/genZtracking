@@ -6,12 +6,22 @@ import { usePathname } from "next/navigation";
 import { isNavItemActive, NAV_ITEMS } from "@/components/nav/nav-items";
 import { cn } from "@/lib/utils";
 
-/** Desktop nav. Hidden below `md`, where MobileTabBar takes over. */
-export function NavLinks() {
+/** Desktop sidebar nav. Hidden below `md`, where MobileTabBar takes over. */
+export function NavLinks({
+  orientation = "vertical",
+}: {
+  orientation?: "horizontal" | "vertical";
+}) {
   const pathname = usePathname();
+  const vertical = orientation === "vertical";
 
   return (
-    <nav aria-label="Main" className="hidden items-center gap-0.5 md:flex">
+    <nav
+      aria-label="Main"
+      className={cn(
+        vertical ? "flex flex-col gap-1" : "hidden items-center gap-0.5 md:flex",
+      )}
+    >
       {NAV_ITEMS.map((item) => {
         const active = isNavItemActive(pathname, item.href);
         return (
@@ -21,17 +31,18 @@ export function NavLinks() {
             title={item.label}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-2 rounded-full px-2.5 py-1.5 text-sm transition-colors lg:px-3",
+              "flex items-center gap-3 rounded-full text-sm transition-colors",
+              vertical ? "px-3 py-2.5" : "px-2.5 py-1.5 lg:px-3",
               item.primary ? "font-semibold" : "font-medium",
               active
-                ? "bg-brand-soft text-brand"
+                ? "bg-brand text-brand-ink shadow-[0_10px_24px_-12px_var(--t-brand)]"
                 : item.primary
                   ? "text-ink hover:bg-glass"
                   : "text-ink-muted hover:bg-glass hover:text-ink",
             )}
           >
             {item.icon}
-            <span className="sr-only lg:not-sr-only">{item.label}</span>
+            <span>{item.label}</span>
           </Link>
         );
       })}

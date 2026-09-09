@@ -11,7 +11,7 @@ import { ProgressBar } from "@/components/habit/ProgressBar";
 import { StreakBadge } from "@/components/habit/StreakBadge";
 import { FreezeTokens } from "@/components/gamify/FreezeTokens";
 import { useGamify } from "@/components/gamify/GamifyProvider";
-import { enterFromNear, staggerInChunks, useGsap } from "@/lib/anim";
+import { enterFromNear, staggerInChunks, useGsap } from "@/lib/anim/gsap";
 import { spendFreeze, toggleDay } from "@/lib/habits/actions";
 import { FREEZE_RETRO_WINDOW_DAYS, HABIT_STATUS_LABELS } from "@/lib/habits/constants";
 import { formatISODate, isWithinRetroWindow } from "@/lib/habits/dates";

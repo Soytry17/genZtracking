@@ -2,64 +2,68 @@ import type { Metadata } from "next";
 
 import { BadgeGrid } from "@/components/gamify/BadgeGrid";
 import { GoalBadgeGrid } from "@/components/gamify/GoalBadgeGrid";
-import { XpBar } from "@/components/gamify/XpBar";
-import {
-  Card,
-  CardBody,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-  Pill,
-} from "@/components/ui";
-import { displayNameFor, requireSession } from "@/lib/auth";
-import { progressToNextLevel } from "@/lib/gamify/rules";
-import { formatISODate } from "@/lib/habits/dates";
-import { getBadges, getGoalBadges, getUserBadges } from "@/lib/habits/queries";
+import { LiveFreezeTokens } from "@/components/gamify/FreezeTokens";
+import { Card, CardBody } from "@/components/ui";
+import { displayNameFor, firstNameFor, requireSession } from "@/lib/auth";
+import { getActiveHabits, getBadges, getGoalBadges, getUserBadges } from "@/lib/habits/queries";
+import { getTodayPageData } from "@/lib/today/queries";
 
 export const metadata: Metadata = { title: "Profile" };
 
 export default async function ProfilePage() {
   const { user, profile } = await requireSession();
   const name = displayNameFor(user, profile);
-  const [badges, earned, goalBadges] = await Promise.all([
+  const first = firstNameFor(user, profile);
+  const initial = (first[0] ?? "Y").toUpperCase();
+  const [badges, earned, goalBadges, habits, today] = await Promise.all([
     getBadges(),
     getUserBadges(user.id),
     getGoalBadges(user.id),
+    getActiveHabits(user.id),
+    getTodayPageData(user.id),
   ]);
-  const progress = progressToNextLevel(profile?.xp ?? 0);
+  const streak = Math.max(0, ...habits.map((habit) => habit.current_streak));
+  const taskTotal = today.openTasks.length + today.doneToday.length;
+  const taskDone = today.doneToday.length;
+  const completion = taskTotal === 0 ? 0 : Math.round((taskDone / taskTotal) * 100);
 
   return (
-    <div className="mx-auto w-full max-w-2xl space-y-6">
-      <h1 className="text-2xl font-semibold">Profile</h1>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="truncate">{name}</CardTitle>
-          <CardDescription className="break-all">{user.email}</CardDescription>
-        </CardHeader>
-        <CardBody className="space-y-4">
-          <XpBar
-            xp={profile?.xp ?? 0}
-            level={profile?.level ?? 1}
-            className="w-full min-w-0"
-          />
-          <div className="flex flex-wrap gap-2">
-            <Pill tone="brand">Level {profile?.level ?? 1}</Pill>
-            {profile?.username ? <Pill>@{profile.username}</Pill> : null}
-            <Pill tone="xp">{profile?.xp ?? 0} XP</Pill>
-            <Pill tone="freeze">❄ {profile?.freeze_tokens ?? 0} freezes</Pill>
-            {profile ? (
-              <Pill>Joined {formatISODate(profile.created_at.slice(0, 10))}</Pill>
-            ) : null}
-            {!progress.isMaxLevel ? (
-              <Pill>
-                {progress.xpForNext - progress.xpIntoLevel} XP to level{" "}
-                {progress.level + 1}
-              </Pill>
-            ) : null}
+    <div className="w-full space-y-6">
+      <header className="flex items-center gap-4">
+        <span className="flex size-16 shrink-0 items-center justify-center rounded-full bg-brand text-xl font-semibold text-brand-ink">
+          {initial}
+        </span>
+        <div className="min-w-0">
+          <h1 className="truncate text-2xl font-semibold tracking-tight">{name}</h1>
+          <p className="mt-1 text-sm text-ink-muted">
+            Keep going, you&apos;re doing great! 🔥
+          </p>
+          <div className="mt-2">
+            <LiveFreezeTokens />
           </div>
-        </CardBody>
-      </Card>
+          {user.email ? (
+            <p className="mt-0.5 truncate text-xs text-ink-subtle">{user.email}</p>
+          ) : null}
+        </div>
+      </header>
+
+      <div className="grid w-full grid-cols-3 gap-2 sm:gap-3">
+        <StatCard
+          label="Day Streak"
+          value={`${streak}`}
+          hint={streak === 1 ? "day" : "days"}
+        />
+        <StatCard
+          label="Today's Tasks"
+          value={`${taskTotal}`}
+          hint="open + done"
+        />
+        <StatCard
+          label="Completion"
+          value={`${completion}%`}
+          hint="today"
+        />
+      </div>
 
       <div data-slot="goal-badge-grid">
         <GoalBadgeGrid badges={goalBadges} />
@@ -68,6 +72,40 @@ export default async function ProfilePage() {
       <div data-slot="badge-grid">
         <BadgeGrid badges={badges} earned={earned} />
       </div>
+
+      <Card>
+        <CardBody className="p-2 sm:p-3">
+          <form action="/auth/signout" method="post">
+            <button
+              type="submit"
+              className="flex min-h-12 w-full items-center justify-between rounded-2xl px-3 text-sm text-ink-muted hover:bg-glass hover:text-ink"
+            >
+              Sign out
+              <span aria-hidden>→</span>
+            </button>
+          </form>
+        </CardBody>
+      </Card>
+    </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  hint,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <div className="rounded-[1.35rem] glass px-3 py-4 text-center sm:px-4">
+      <p className="text-lg font-semibold tabular-nums tracking-tight sm:text-xl">
+        {value}
+      </p>
+      <p className="mt-1 text-[11px] font-medium text-ink-muted">{label}</p>
+      <p className="text-[10px] text-ink-subtle">{hint}</p>
     </div>
   );
 }

@@ -11,7 +11,7 @@ import {
 import { createPortal } from "react-dom";
 
 import { HabitIcon } from "@/components/habit/HabitIcon";
-import { prefersReducedMotion } from "@/lib/anim";
+import { prefersReducedMotion } from "@/lib/anim/reduced-motion";
 import { cn } from "@/lib/utils";
 import type { HabitPreset } from "@/types/database";
 
@@ -22,7 +22,6 @@ const INNER_RADIUS = MENU * 0.23;
 const OUTER_RADIUS = MENU * 0.385;
 const SINGLE_RADIUS = MENU * 0.34;
 const MD = 768;
-const CREATE_COL_PX = 672;
 
 type Corner = "tl" | "tr" | "bl" | "br";
 
@@ -54,20 +53,27 @@ function readSafeBottom(): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-function columnInset(): number {
-  const gutter = mobileView() ? 16 : 24;
-  const col = Math.min(CREATE_COL_PX, window.innerWidth - gutter * 2);
-  return Math.max(gutter, (window.innerWidth - col) / 2);
+function readSidebarPx(): number {
+  if (mobileView()) return 0;
+  const rem = parseFloat(
+    getComputedStyle(document.documentElement)
+      .getPropertyValue("--app-sidebar")
+      .trim(),
+  );
+  const root = parseFloat(getComputedStyle(document.documentElement).fontSize);
+  const remPx = Number.isFinite(rem) ? rem : 15.5;
+  const rootPx = Number.isFinite(root) ? root : 16;
+  return remPx * rootPx;
 }
 
 function safeBox() {
   const mobile = mobileView();
-  const inset = mobile ? 16 : columnInset();
+  const gutter = mobile ? 16 : 24;
   return {
     top: mobile ? 72 : 88,
-    right: inset,
+    right: gutter,
     bottom: mobile ? 108 + readSafeBottom() : 24,
-    left: inset,
+    left: readSidebarPx() + gutter,
   };
 }
 
@@ -113,7 +119,7 @@ function nearestCorner(x: number, y: number): Corner {
 }
 
 function cornerFromPoint(point: Point | null): Corner {
-  if (!point) return "br";
+  if (!point) return "tr";
   return nearestCorner(point.x, point.y);
 }
 
@@ -218,7 +224,7 @@ export function TemplateAssistiveTouch({
   function ballRect(): DOMRect {
     return (
       ballRef.current?.getBoundingClientRect() ??
-      new DOMRect(window.innerWidth - 16 - BALL, window.innerHeight - 128 - BALL, BALL, BALL)
+      new DOMRect(window.innerWidth - 16 - BALL, 88, BALL, BALL)
     );
   }
 
@@ -282,7 +288,7 @@ export function TemplateAssistiveTouch({
         className={cn(
           "pointer-events-none fixed z-50",
           pos == null &&
-            "right-4 bottom-[calc(7.25rem+var(--safe-bottom))] md:bottom-8 md:right-[max(1.5rem,calc((100vw-42rem)/2+0.5rem))]",
+            "right-4 top-[max(4.5rem,calc(4.25rem+var(--safe-top)))] md:right-8 md:top-24",
         )}
         style={pos ? { left: pos.x, top: pos.y } : undefined}
       >

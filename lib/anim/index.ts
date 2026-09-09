@@ -1,8 +1,7 @@
+export { prefersReducedMotion } from "./reduced-motion";
 export {
   useGsap,
   gsap,
-  ScrollTrigger,
-  prefersReducedMotion,
   registerGsapPlugins,
   enterFromNear,
   staggerInChunks,

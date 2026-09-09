@@ -9,8 +9,8 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI",
-    var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), Inter, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   /* Semantic surfaces */
@@ -43,10 +43,11 @@
   --color-destructive: var(--t-danger);
   --color-ring: var(--t-brand);
   --color-input: var(--t-hairline);
-  --color-accent: var(--t-brand-soft);
-  --color-accent-foreground: var(--t-brand);
   --color-accent: var(--t-accent);
+  --color-accent-foreground: var(--t-brand);
   --color-accent-soft: var(--t-accent-soft);
+  --color-info: var(--t-info);
+  --color-info-soft: var(--t-info-soft);
   --color-success: var(--t-success);
   --color-success-soft: var(--t-success-soft);
   --color-warning: var(--t-warning);
@@ -68,7 +69,7 @@
   --color-day-frozen: var(--t-day-frozen);
 
   /* Habit palette. `habits.color` stores one of these keys. */
-  --color-habit-violet: #7c5cff;
+  --color-habit-violet: #6366f1;
   --color-habit-cyan: #22d3ee;
   --color-habit-emerald: #34d399;
   --color-habit-amber: #fbbf24;
@@ -77,7 +78,7 @@
   --color-habit-lime: #a3e635;
   --color-habit-fuchsia: #e879f9;
 
-  --radius-card: 1.375rem;
+  --radius-card: 1.5rem;
   --radius-panel: 1.75rem;
   --radius-control: 9999px;
 
@@ -96,15 +97,16 @@
   --safe-left: env(safe-area-inset-left, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --app-gutter: 1rem;
-  --app-max: 72rem;
+  --app-sidebar: 15.5rem;
+  --app-overview: 19rem;
   --app-header-pad-top: max(0.75rem, var(--safe-top));
   --app-tabbar-clearance: calc(5.75rem + var(--safe-bottom));
   --landing-header: calc(3.5rem + var(--app-header-pad-top));
+  --page-enter-duration: 240ms;
 }
 
 @media (min-width: 768px) {
   :root {
-    --app-gutter: 1.5rem;
     --app-tabbar-clearance: 3rem;
   }
 }
@@ -114,27 +116,27 @@
 .dark {
   color-scheme: dark;
 
-  --t-canvas: #08080c;
-  --t-surface: rgb(255 255 255 / 0.08);
-  --t-surface-2: rgb(255 255 255 / 0.1);
-  --t-surface-3: rgb(255 255 255 / 0.14);
-  --t-line: rgb(255 255 255 / 0.1);
-  --t-line-strong: rgb(255 255 255 / 0.16);
+  --t-canvas: #0b1020;
+  --t-surface: rgb(17 24 39 / 0.72);
+  --t-surface-2: rgb(31 41 55 / 0.8);
+  --t-surface-3: rgb(31 41 55 / 0.92);
+  --t-line: rgb(255 255 255 / 0.08);
+  --t-line-strong: rgb(255 255 255 / 0.14);
 
-  --t-glass: rgb(255 255 255 / 0.08);
-  --t-glass-strong: rgb(255 255 255 / 0.12);
-  --t-hairline: rgb(255 255 255 / 0.18);
-  --t-glass-inset: rgb(0 0 0 / 0.28);
-  --t-glass-shadow: 0 8px 32px -12px rgb(0 0 0 / 0.5),
-    0 1px 0 0 rgb(255 255 255 / 0.08) inset;
+  --t-glass: rgb(17 24 39 / 0.62);
+  --t-glass-strong: rgb(17 24 39 / 0.78);
+  --t-hairline: rgb(255 255 255 / 0.1);
+  --t-glass-inset: rgb(0 0 0 / 0.32);
+  --t-glass-shadow: 0 10px 40px -16px rgb(0 0 0 / 0.55),
+    0 1px 0 0 rgb(255 255 255 / 0.06) inset;
 
-  --t-ink: #f5f5f8;
-  --t-ink-muted: #a3a3b8;
-  --t-ink-subtle: #6b6b82;
+  --t-ink: #f1f5f9;
+  --t-ink-muted: #94a3b8;
+  --t-ink-subtle: #64748b;
 
-  --t-brand: #7c5cff;
-  --t-brand-hover: #8f74ff;
-  --t-brand-soft: rgb(124 92 255 / 0.16);
+  --t-brand: #6366f1;
+  --t-brand-hover: #8b5cf6;
+  --t-brand-soft: rgb(99 102 241 / 0.18);
   --t-brand-ink: #ffffff;
   --primary: var(--t-brand);
   --primary-foreground: var(--t-brand-ink);
@@ -146,13 +148,15 @@
 
   --t-accent: #22d3ee;
   --t-accent-soft: rgb(34 211 238 / 0.14);
+  --t-info: #3b82f6;
+  --t-info-soft: rgb(59 130 246 / 0.16);
 
-  --t-success: #34d399;
-  --t-success-soft: rgb(52 211 153 / 0.14);
-  --t-warning: #fbbf24;
-  --t-warning-soft: rgb(251 191 36 / 0.14);
-  --t-danger: #fb7185;
-  --t-danger-soft: rgb(251 113 133 / 0.14);
+  --t-success: #10b981;
+  --t-success-soft: rgb(16 185 129 / 0.16);
+  --t-warning: #f59e0b;
+  --t-warning-soft: rgb(245 158 11 / 0.16);
+  --t-danger: #ef4444;
+  --t-danger-soft: rgb(239 68 68 / 0.16);
 
   --t-xp: #fbbf24;
   --t-xp-soft: rgb(251 191 36 / 0.16);
@@ -161,7 +165,7 @@
   --t-streak: #fb923c;
 
   --t-day-empty: rgb(255 255 255 / 0.06);
-  --t-day-done: #34d399;
+  --t-day-done: #10b981;
   --t-day-skipped: rgb(255 255 255 / 0.1);
   --t-day-frozen: #7dd3fc;
 }
@@ -188,20 +192,22 @@
   --t-ink-muted: #52526b;
   --t-ink-subtle: #8a8aa3;
 
-  --t-brand: #6338f5;
-  --t-brand-hover: #5227e8;
-  --t-brand-soft: rgb(99 56 245 / 0.1);
+  --t-brand: #4f46e5;
+  --t-brand-hover: #6366f1;
+  --t-brand-soft: rgb(79 70 229 / 0.12);
   --t-brand-ink: #ffffff;
 
   --t-accent: #0891b2;
   --t-accent-soft: rgb(8 145 178 / 0.1);
+  --t-info: #2563eb;
+  --t-info-soft: rgb(37 99 235 / 0.12);
 
   --t-success: #059669;
   --t-success-soft: rgb(5 150 105 / 0.1);
   --t-warning: #d97706;
   --t-warning-soft: rgb(217 119 6 / 0.1);
-  --t-danger: #e11d48;
-  --t-danger-soft: rgb(225 29 72 / 0.1);
+  --t-danger: #dc2626;
+  --t-danger-soft: rgb(220 38 38 / 0.1);
 
   --t-xp: #d97706;
   --t-xp-soft: rgb(217 119 6 / 0.12);
@@ -298,23 +304,26 @@
   }
 
   /*
-    Magenta Orb Grid (dark) — PatternCraft
-    https://patterncraft.fun/  id: magenta-orb-grid
-    Official snippet: background #020617 + 40px slate grid + magenta/violet orb.
-    Used as the app/auth canvas behind glass. Static CSS only.
+    Dark navy grid — matches the genZtracking kit.
+    Thin lines + a soft indigo wash. No magenta orb.
   */
+  .bg-navy-grid,
   .bg-magenta-orb-grid {
-    background-color: #020617;
+    background-color: #0b1020;
     background-image:
-      linear-gradient(to right, rgba(71, 85, 105, 0.15) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(71, 85, 105, 0.15) 1px, transparent 1px),
+      linear-gradient(to right, rgba(148, 163, 184, 0.055) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(148, 163, 184, 0.055) 1px, transparent 1px),
       radial-gradient(
-        circle at 50% 60%,
-        rgba(236, 72, 153, 0.15) 0%,
-        rgba(168, 85, 247, 0.05) 40%,
-        transparent 70%
+        48rem 32rem at 12% -8%,
+        rgba(99, 102, 241, 0.2) 0%,
+        transparent 58%
+      ),
+      radial-gradient(
+        36rem 28rem at 92% 0%,
+        rgba(139, 92, 246, 0.1) 0%,
+        transparent 52%
       );
-    background-size: 40px 40px, 40px 40px, 100% 100%;
+    background-size: 48px 48px, 48px 48px, 100% 100%, 100% 100%;
   }
 
   .text-gradient-brand {
@@ -349,6 +358,20 @@
     box-shadow: var(--t-glass-shadow);
     -webkit-backdrop-filter: blur(24px) saturate(180%);
     backdrop-filter: blur(24px) saturate(180%);
+  }
+
+  /* Portaled kebab / context menus. Near-opaque canvas so sibling glass
+     cards cannot ghost through the text, even if blur is weak. */
+  .menu-popover {
+    background-color: rgb(11 16 32 / 0.96);
+    border: 1px solid var(--t-hairline);
+    box-shadow: var(--t-glass-shadow), 0 18px 40px -12px rgb(0 0 0 / 0.65);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
+    backdrop-filter: blur(28px) saturate(180%);
+  }
+
+  .light .menu-popover {
+    background-color: rgb(255 255 255 / 0.96);
   }
 
   .glass-inset {
@@ -459,6 +482,27 @@
   .js-anim-hidden {
     opacity: 1;
   }
+
+  /*
+    Route enter. Lives on template.tsx so it remounts; layout chrome stays put.
+    Base opacity is 1 — if the animation never runs, content stays visible.
+    End at transform: none so fill-mode does not leave a containing block
+    that would trap position:fixed / z-index of in-tree overlays.
+  */
+  .page-enter {
+    animation: page-enter var(--page-enter-duration) var(--ease-out-quint) both;
+  }
+
+  @keyframes page-enter {
+    from {
+      opacity: 0.92;
+      transform: translate3d(0, 8px, 0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
 
 @supports not (
@@ -507,7 +551,8 @@
   }
 
   .js-anim-hidden,
-  .js-cell-enter {
+  .js-cell-enter,
+  .page-enter {
     opacity: 1 !important;
     transform: none !important;
     visibility: visible !important;

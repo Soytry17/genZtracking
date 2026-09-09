@@ -2,7 +2,7 @@
 
 import { useRef, type ReactNode } from "react";
 
-import { enterFromNear, useGsap } from "@/lib/anim";
+import { enterFromNear, useGsap } from "@/lib/anim/gsap";
 import { cn } from "@/lib/utils";
 
 export function HabitCardGrid({

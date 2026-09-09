@@ -3,7 +3,7 @@
 import { useRef } from "react";
 
 import { Card, CardBody } from "@/components/ui";
-import { useGsap } from "@/lib/anim";
+import { useGsap } from "@/lib/anim/gsap";
 
 export type LandingFeature = {
   title: string;

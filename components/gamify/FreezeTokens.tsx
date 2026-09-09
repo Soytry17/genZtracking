@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import { animateFreeze, animateFreezeSpend } from "@/lib/anim/anime";
+import { useGamify } from "@/components/gamify/GamifyProvider";
 import { FREEZE_MAX_TOKENS } from "@/lib/habits/constants";
 import { cn } from "@/lib/utils";
 
@@ -59,4 +60,10 @@ export function FreezeTokens({
       ))}
     </div>
   );
+}
+
+/** Freeze bank that follows Server Action results via GamifyProvider. */
+export function LiveFreezeTokens({ className }: { className?: string }) {
+  const { freezeTokens } = useGamify();
+  return <FreezeTokens count={freezeTokens} className={className} />;
 }

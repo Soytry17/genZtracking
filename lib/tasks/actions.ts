@@ -13,6 +13,7 @@ import {
   isTaskImportance,
   isTaskPriority,
 } from "@/lib/tasks/constants";
+import { TASK_BOARD_COLUMNS } from "@/lib/tasks/queries";
 import type {
   DailyTask,
   TaskImportance,
@@ -66,7 +67,7 @@ async function loadOwnedTask(
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("daily_tasks")
-    .select("*")
+    .select(TASK_BOARD_COLUMNS)
     .eq("id", taskId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -108,7 +109,7 @@ export async function createTask(input: {
       priority,
       importance,
     })
-    .select("*")
+    .select(TASK_BOARD_COLUMNS)
     .single();
 
   if (error || !data) return fail(error?.message ?? "Could not create the task.");
@@ -145,7 +146,7 @@ export async function updateTask(
     .update({ title, description, importance })
     .eq("id", taskId)
     .eq("user_id", user.id)
-    .select("*")
+    .select(TASK_BOARD_COLUMNS)
     .single();
 
   if (error || !data) return fail(error?.message ?? "Could not update the task.");
@@ -160,37 +161,47 @@ export async function setTaskPriority(
   const user = await requireUser();
   if (!isTaskPriority(priority)) return fail("That priority is not valid.");
 
-  const loaded = await loadOwnedTask(taskId, user.id);
-  if ("ok" in loaded) return loaded;
-
-  if (loaded.task.priority === priority) {
-    return { ok: true, data: loaded.task };
-  }
-
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("daily_tasks")
     .update({ priority })
     .eq("id", taskId)
     .eq("user_id", user.id)
-    .select("*")
-    .single();
+    .select(TASK_BOARD_COLUMNS)
+    .maybeSingle();
 
-  if (error || !data) {
-    return fail(error?.message ?? "Could not move the task.");
-  }
-  revalidateTasks();
+  if (error) return fail(error.message);
+  if (!data) return fail("Task not found.");
+  return { ok: true, data: data as DailyTask };
+}
+
+export async function setTaskImportance(
+  taskId: string,
+  importance: TaskImportance,
+): Promise<TaskActionResult<DailyTask>> {
+  const user = await requireUser();
+  if (!isTaskImportance(importance)) return fail("That importance is not valid.");
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("daily_tasks")
+    .update({ importance })
+    .eq("id", taskId)
+    .eq("user_id", user.id)
+    .select(TASK_BOARD_COLUMNS)
+    .maybeSingle();
+
+  if (error) return fail(error.message);
+  if (!data) return fail("Task not found.");
   return { ok: true, data: data as DailyTask };
 }
 
 export async function toggleTaskComplete(
   taskId: string,
+  complete: boolean,
 ): Promise<TaskActionResult<DailyTask>> {
   const user = await requireUser();
-  const loaded = await loadOwnedTask(taskId, user.id);
-  if ("ok" in loaded) return loaded;
-
-  const completedAt = loaded.task.completed_at ? null : new Date().toISOString();
+  const completedAt = complete ? new Date().toISOString() : null;
 
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -198,13 +209,11 @@ export async function toggleTaskComplete(
     .update({ completed_at: completedAt })
     .eq("id", taskId)
     .eq("user_id", user.id)
-    .select("*")
-    .single();
+    .select(TASK_BOARD_COLUMNS)
+    .maybeSingle();
 
-  if (error || !data) {
-    return fail(error?.message ?? "Could not update the task.");
-  }
-  revalidateTasks();
+  if (error) return fail(error.message);
+  if (!data) return fail("Task not found.");
   return { ok: true, data: data as DailyTask };
 }
 

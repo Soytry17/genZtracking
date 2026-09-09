@@ -125,7 +125,7 @@ async function getLog(habitId: string, date: ISODate): Promise<HabitLog | null> 
   const supabase = await createClient();
   const { data } = await supabase
     .from("habit_logs")
-    .select("*")
+    .select("id, habit_id, user_id, log_date, status, note, created_at, updated_at")
     .eq("habit_id", habitId)
     .eq("log_date", date)
     .maybeSingle();
@@ -243,28 +243,59 @@ async function collectBadgeStats(userId: string): Promise<{
   comebackReady: boolean;
 }> {
   const supabase = await createClient();
-  const { data: habits } = await supabase
-    .from("habits")
-    .select("*")
-    .eq("user_id", userId);
+  const [{ data: habits }, { data: spends }] = await Promise.all([
+    supabase
+      .from("habits")
+      .select("id, status, current_streak, longest_streak, start_date, end_date")
+      .eq("user_id", userId),
+    supabase
+      .from("freeze_ledger")
+      .select("habit_id, log_date")
+      .eq("user_id", userId)
+      .eq("reason", "spent")
+      .not("log_date", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ]);
 
-  const list = (habits ?? []) as Habit[];
+  const list = habits ?? [];
   const longestStreak = list.reduce(
     (max, habit) => Math.max(max, habit.longest_streak, habit.current_streak),
     0,
   );
 
-  let perfectHabitCompleted = false;
-  for (const habit of list.filter((row) => row.status === "completed")) {
+  const completedIds = list
+    .filter((row) => row.status === "completed")
+    .map((row) => row.id);
+  const spendHabitIds = [
+    ...new Set(
+      (spends ?? [])
+        .map((row) => row.habit_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  ];
+  const logHabitIds = [...new Set([...completedIds, ...spendHabitIds])];
+
+  const logsByHabit = new Map<string, Pick<HabitLog, "log_date" | "status">[]>();
+  if (logHabitIds.length > 0) {
     const { data: logs } = await supabase
       .from("habit_logs")
-      .select("log_date, status")
-      .eq("habit_id", habit.id);
+      .select("habit_id, log_date, status")
+      .in("habit_id", logHabitIds);
+    for (const log of logs ?? []) {
+      const listForHabit = logsByHabit.get(log.habit_id) ?? [];
+      listForHabit.push({ log_date: log.log_date, status: log.status });
+      logsByHabit.set(log.habit_id, listForHabit);
+    }
+  }
+
+  let perfectHabitCompleted = false;
+  for (const habit of list.filter((row) => row.status === "completed")) {
     if (
       isPerfectHabit({
         start_date: habit.start_date,
         end_date: habit.end_date,
-        logs: (logs ?? []) as Pick<HabitLog, "log_date" | "status">[],
+        logs: logsByHabit.get(habit.id) ?? [],
       })
     ) {
       perfectHabitCompleted = true;
@@ -272,26 +303,13 @@ async function collectBadgeStats(userId: string): Promise<{
     }
   }
 
-  const { data: spends } = await supabase
-    .from("freeze_ledger")
-    .select("habit_id, log_date")
-    .eq("user_id", userId)
-    .eq("reason", "spent")
-    .not("log_date", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(20);
-
   let comebackReady = false;
   for (const spend of spends ?? []) {
     if (!spend.habit_id || !spend.log_date) continue;
-    const { data: logs } = await supabase
-      .from("habit_logs")
-      .select("log_date, status")
-      .eq("habit_id", spend.habit_id);
     if (
       hasComebackStreak(
         spend.log_date,
-        (logs ?? []) as Pick<HabitLog, "log_date" | "status">[],
+        logsByHabit.get(spend.habit_id) ?? [],
       )
     ) {
       comebackReady = true;
@@ -312,15 +330,13 @@ async function syncBadges(
   habitId?: string,
 ): Promise<Badge[]> {
   const supabase = await createClient();
-  const stats = await collectBadgeStats(userId);
+  const [stats, existingRes] = await Promise.all([
+    collectBadgeStats(userId),
+    supabase.from("user_badges").select("badge_id").eq("user_id", userId),
+  ]);
   const deserved = badgesEarnedFor(stats);
 
-  const { data: existing } = await supabase
-    .from("user_badges")
-    .select("badge_id")
-    .eq("user_id", userId);
-
-  const have = new Set((existing ?? []).map((row) => row.badge_id));
+  const have = new Set((existingRes.data ?? []).map((row) => row.badge_id));
   const fresh = deserved.filter((id) => !have.has(id));
   if (fresh.length === 0) return [];
 
@@ -352,20 +368,21 @@ async function captureGamify(
   const previousXp = before?.xp ?? 0;
   const previousLevel = before?.level ?? 1;
 
-  const newBadges = await syncBadges(userId, habitId);
-  const profile = await syncProfileXp(userId);
-  const refreshed = (await fetchProfile(userId)) ?? profile;
+  const [newBadges, profile] = await Promise.all([
+    syncBadges(userId, habitId),
+    syncProfileXp(userId),
+  ]);
 
   return {
-    xpDelta: refreshed.xp - previousXp,
+    xpDelta: profile.xp - previousXp,
     previousXp,
-    newXp: refreshed.xp,
+    newXp: profile.xp,
     previousLevel,
-    newLevel: refreshed.level,
-    leveledUp: refreshed.level > previousLevel,
+    newLevel: profile.level,
+    leveledUp: profile.level > previousLevel,
     newBadges,
     newGoalBadges: extra?.newGoalBadges ?? [],
-    freezeTokens: refreshed.freeze_tokens,
+    freezeTokens: profile.freeze_tokens,
   };
 }
 
@@ -579,29 +596,34 @@ export async function createHabit(formData: FormData): Promise<ActionResult<{ id
 export async function toggleDay(
   habitId: string,
   date: ISODate,
-): Promise<ActionResult<{ status: HabitLogStatus | null }>> {
+): Promise<ActionResult<{ status: HabitLogStatus | null; currentStreak: number }>> {
   const user = await requireUser();
-  const loaded = await loadHabit(habitId, user.id);
+  const [loaded, existing, previous] = await Promise.all([
+    loadHabit(habitId, user.id),
+    getLog(habitId, date),
+    fetchProfile(user.id),
+  ]);
   if ("ok" in loaded) return loaded;
 
   const blocked = assertLoggableDay(loaded.habit, date);
   if (blocked) return fail(blocked);
 
-  const existing = await getLog(habitId, date);
   if (existing?.status === "frozen") {
     return fail("Frozen days can't be toggled.");
   }
 
-  const previous = await fetchProfile(user.id);
   const supabase = await createClient();
 
   if (existing?.status === "done") {
     const { error } = await supabase.from("habit_logs").delete().eq("id", existing.id);
     if (error) return fail(error.message);
     await revokeDayXp(user.id, habitId, date);
-    const gamify = await captureGamify(user.id, previous, habitId);
+    const [streak, gamify] = await Promise.all([
+      currentStreak(habitId),
+      captureGamify(user.id, previous, habitId),
+    ]);
     revalidateHabit(habitId);
-    return { ok: true, data: { status: null }, gamify };
+    return { ok: true, data: { status: null, currentStreak: streak }, gamify };
   }
 
   if (existing) {
@@ -624,7 +646,7 @@ export async function toggleDay(
   await awardDayXp(user.id, habitId, date, streak);
   const gamify = await captureGamify(user.id, previous, habitId);
   revalidateHabit(habitId);
-  return { ok: true, data: { status: "done" }, gamify };
+  return { ok: true, data: { status: "done", currentStreak: streak }, gamify };
 }
 
 export async function skipDay(
@@ -728,7 +750,11 @@ export async function spendFreeze(
   date: ISODate,
 ): Promise<ActionResult<SpendFreezeResult>> {
   const user = await requireUser();
-  const loaded = await loadHabit(habitId, user.id);
+  const [loaded, existing, previous] = await Promise.all([
+    loadHabit(habitId, user.id),
+    getLog(habitId, date),
+    fetchProfile(user.id),
+  ]);
   if ("ok" in loaded) return loaded;
 
   const blocked = assertLoggableDay(loaded.habit, date);
@@ -738,10 +764,8 @@ export async function spendFreeze(
     return fail(`Freezes can only be used on today or the last ${FREEZE_RETRO_WINDOW_DAYS} days.`);
   }
 
-  const existing = await getLog(habitId, date);
   if (existing) return fail("That day is already logged.");
 
-  const previous = await fetchProfile(user.id);
   if (!previous || previous.freeze_tokens < 1) {
     return fail("You don't have a freeze token to spend.");
   }

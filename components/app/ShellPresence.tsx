@@ -2,7 +2,7 @@
 
 import { useRef, type ReactNode } from "react";
 
-import { enterFromNear, useGsap } from "@/lib/anim";
+import { enterFromNear, useGsap } from "@/lib/anim/gsap";
 
 /** Nav / XP bar presence on first paint. */
 export function ShellPresence({ children }: { children: ReactNode }) {

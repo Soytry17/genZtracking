@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 
-import { enterFromNear, useGsap } from "@/lib/anim";
+import { enterFromNear, useGsap } from "@/lib/anim/gsap";
 
 import { Button, inputClassName } from "@/components/ui";
 import { useGamify } from "@/components/gamify/GamifyProvider";

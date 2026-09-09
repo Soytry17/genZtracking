@@ -1,28 +1,23 @@
 "use client";
 
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
 import {
   useLayoutEffect,
   type DependencyList,
   type RefObject,
 } from "react";
 
-let pluginsRegistered = false;
+import { prefersReducedMotion } from "@/lib/anim/reduced-motion";
 
 /** Start opacity for enter tweens. Never 0 — content stays readable if GSAP never plays. */
 export const NEAR_VISIBLE = 0.78;
 
+/** Kept so existing callers compile. ScrollTrigger is unused. */
 export function registerGsapPlugins() {
-  if (pluginsRegistered || typeof window === "undefined") return;
-  gsap.registerPlugin(ScrollTrigger);
-  pluginsRegistered = true;
+  /* no plugins */
 }
 
-export function prefersReducedMotion(): boolean {
-  if (typeof window === "undefined") return true;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
+export { prefersReducedMotion };
 
 function toElements(targets: unknown): HTMLElement[] {
   if (!targets) return [];
@@ -58,15 +53,6 @@ function revealHidden(scope: ParentNode) {
     el.style.opacity = "1";
     el.style.transform = "none";
     el.style.visibility = "visible";
-  });
-}
-
-function killScrollTriggersIn(scope: HTMLElement) {
-  ScrollTrigger.getAll().forEach((st) => {
-    const trigger = st.trigger;
-    if (trigger instanceof Node && scope.contains(trigger)) {
-      st.kill();
-    }
   });
 }
 
@@ -169,7 +155,6 @@ export function driftAurora(targets: gsap.TweenTarget, duration = 10) {
  * Runs a GSAP context against `scopeRef` and reverts it on unmount / dep change.
  * No-ops (and unhides `.js-anim-hidden`) when the user prefers reduced motion.
  * If GSAP throws, content is forced visible instead of staying mid-tween.
- * ScrollTriggers created in the context are killed on revert.
  */
 export function useGsap(
   scopeRef: RefObject<HTMLElement | null>,
@@ -186,11 +171,9 @@ export function useGsap(
     }
 
     try {
-      registerGsapPlugins();
       const ctx = gsap.context(() => setup(gsap), scope);
       return () => {
         try {
-          killScrollTriggersIn(scope);
           ctx.revert();
         } catch {
           revealHidden(scope);
@@ -204,4 +187,4 @@ export function useGsap(
   }, deps);
 }
 
-export { gsap, ScrollTrigger };
+export { gsap };

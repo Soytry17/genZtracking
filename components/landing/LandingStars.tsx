@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { prefersReducedMotion } from "@/lib/anim";
+import { prefersReducedMotion } from "@/lib/anim/reduced-motion";
 
 import styles from "./LandingStars.module.css";
 

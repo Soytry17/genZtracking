@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-import { Button } from "@/components/ui";
+import { Button } from "@/components/ui/button";
 import { GoalBadgeIcon } from "@/components/habit/GoalBadgeIcon";
 import { HabitIcon } from "@/components/habit/HabitIcon";
 import { animateLevelUpBurst, killAnime } from "@/lib/anim/anime";

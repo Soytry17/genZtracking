@@ -2,7 +2,8 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 
-import { animatePress, enterFromNear, useGsap } from "@/lib/anim";
+import { animatePress } from "@/lib/anim/anime";
+import { enterFromNear, useGsap } from "@/lib/anim/gsap";
 
 import { GoalBadgeFields } from "@/components/habit/GoalBadgeFields";
 import { HabitIcon } from "@/components/habit/HabitIcon";
@@ -146,49 +147,33 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
     ) ?? null;
 
   return (
-    <div ref={rootRef} className="relative pb-28 md:pb-8">
+    <div ref={rootRef} className="relative w-full">
       <TemplateAssistiveTouch
         presets={presets}
         selectedId={selectedPreset?.id ?? null}
         onPick={applyPreset}
       />
-      <Card data-form-section data-create-card>
-        <CardBody className="p-5">
+      <Card data-form-section data-create-card className="w-full">
+        <CardBody className="p-5 sm:p-6">
           <form action={action} className="space-y-4">
             <input type="hidden" name="color" value={color} />
             <input type="hidden" name="icon" value={icon} />
             <input type="hidden" name="goal_badge_enabled" value={goalBadgeOn ? "1" : ""} />
 
-            <Field label="Title" htmlFor="title">
-              <input
-                id="title"
-                name="title"
-                required
-                maxLength={HABIT_TITLE_MAX_LENGTH}
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="Read 20 pages"
-                className={inputClassName}
-              />
-            </Field>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <Field label="Title" htmlFor="title">
+                <input
+                  id="title"
+                  name="title"
+                  required
+                  maxLength={HABIT_TITLE_MAX_LENGTH}
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="Read 20 pages"
+                  className={inputClassName}
+                />
+              </Field>
 
-            <Field
-              label="Description"
-              htmlFor="description"
-              hint="Optional. The overall why, not the per-day note."
-            >
-              <textarea
-                id="description"
-                name="description"
-                maxLength={HABIT_DESCRIPTION_MAX_LENGTH}
-                rows={2}
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                className={`${inputClassName} h-auto py-3`}
-              />
-            </Field>
-
-            <div className="grid grid-cols-1 gap-4">
               <Field label="Start date" htmlFor="start_date">
                 <input
                   id="start_date"
@@ -200,6 +185,24 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
                   className={inputClassName}
                 />
               </Field>
+
+              <Field
+                className="md:col-span-2"
+                label="Description"
+                htmlFor="description"
+                hint="Optional. The overall why, not the per-day note."
+              >
+                <textarea
+                  id="description"
+                  name="description"
+                  maxLength={HABIT_DESCRIPTION_MAX_LENGTH}
+                  rows={2}
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
+                  className={`${inputClassName} h-auto py-3`}
+                />
+              </Field>
+
               <Field
                 label="Duration (days)"
                 htmlFor="duration_days"
@@ -223,33 +226,33 @@ export function CreateHabitForm({ presets }: { presets: HabitPreset[] }) {
                   className={inputClassName}
                 />
               </Field>
-            </div>
 
-            <div className="flex flex-wrap gap-1.5">
-              {HABIT_DURATION_PRESETS.map((days) => (
-                <button
-                  key={days}
-                  type="button"
-                  onClick={() => applyDuration(days)}
-                  aria-pressed={duration === days}
-                  className={chipClassName(duration === days)}
-                >
-                  {days}d
-                </button>
-              ))}
-            </div>
+              <Field label="End date" htmlFor="end_date">
+                <input
+                  id="end_date"
+                  name="end_date"
+                  type="date"
+                  required
+                  value={endDate}
+                  onChange={(event) => applyEnd(event.target.value)}
+                  className={inputClassName}
+                />
+              </Field>
 
-            <Field label="End date" htmlFor="end_date">
-              <input
-                id="end_date"
-                name="end_date"
-                type="date"
-                required
-                value={endDate}
-                onChange={(event) => applyEnd(event.target.value)}
-                className={inputClassName}
-              />
-            </Field>
+              <div className="flex flex-wrap gap-1.5 md:col-span-2">
+                {HABIT_DURATION_PRESETS.map((days) => (
+                  <button
+                    key={days}
+                    type="button"
+                    onClick={() => applyDuration(days)}
+                    aria-pressed={duration === days}
+                    className={chipClassName(duration === days)}
+                  >
+                    {days}d
+                  </button>
+                ))}
+              </div>
+            </div>
 
             <div className="rounded-2xl glass-thin">
               <button

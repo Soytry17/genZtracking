@@ -3,10 +3,11 @@ import type { Metadata } from "next";
 import { EmptyState } from "@/components/habit/EmptyState";
 import { HabitCard } from "@/components/habit/HabitCard";
 import { HabitCardGrid } from "@/components/habit/HabitCardGrid";
-import { requireSession } from "@/lib/auth";
+import { LiveFreezeTokens } from "@/components/gamify/FreezeTokens";
+import { requireUser } from "@/lib/auth";
 import { HABIT_STATUS_LABELS, ROUTES } from "@/lib/habits/constants";
 import { buildHabitDays } from "@/lib/habits/dates";
-import { getArchivedHabits, getLogsForHabits } from "@/lib/habits/queries";
+import { getArchivedHabits, getLogsForUser } from "@/lib/habits/queries";
 import type { HabitStatus } from "@/types/database";
 
 export const metadata: Metadata = { title: "Archive" };
@@ -14,9 +15,11 @@ export const metadata: Metadata = { title: "Archive" };
 const GROUPS: HabitStatus[] = ["paused", "completed", "archived"];
 
 export default async function ArchivePage() {
-  const { user } = await requireSession();
-  const habits = await getArchivedHabits(user.id);
-  const logs = await getLogsForHabits(habits.map((habit) => habit.id));
+  const user = await requireUser();
+  const [habits, logs] = await Promise.all([
+    getArchivedHabits(user.id),
+    getLogsForUser(user.id),
+  ]);
   const logsByHabit = new Map<string, typeof logs>();
   for (const log of logs) {
     const list = logsByHabit.get(log.habit_id) ?? [];
@@ -25,13 +28,16 @@ export default async function ArchivePage() {
   }
 
   return (
-    <div className="space-y-8">
-      <header>
-        <h1 className="text-2xl font-semibold">Archive</h1>
-        <p className="mt-1 text-sm text-ink-muted">
-          Paused, completed, and archived habits. Restore any of them from the
-          panel.
-        </p>
+    <div className="w-full space-y-8">
+      <header className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight md:text-3xl">Archive</h1>
+          <p className="mt-1 text-sm text-ink-muted">
+            Paused, completed, and archived habits. Restore any of them from the
+            panel.
+          </p>
+        </div>
+        <LiveFreezeTokens className="mt-1 shrink-0 md:hidden" />
       </header>
 
       {habits.length === 0 ? (

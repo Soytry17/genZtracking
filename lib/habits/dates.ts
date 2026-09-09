@@ -304,6 +304,38 @@ export function formatISODate(
   }).format(fromISODate(date));
 }
 
+/** Clock time in the app timezone, e.g. "3:42 PM" in Phnom Penh. */
+export function formatAppTime(
+  instant: string | Date,
+  locale = "en-US",
+): string {
+  const date = typeof instant === "string" ? new Date(instant) : instant;
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: APP_TIME_ZONE,
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+}
+
+/** Current clock hour (0–23) in the app timezone. */
+export function appClockHour(timeZone: string = APP_TIME_ZONE): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    hour: "numeric",
+    hourCycle: "h23",
+  }).formatToParts(new Date());
+  return Number(parts.find((part) => part.type === "hour")?.value ?? "0");
+}
+
+/** Time-of-day greeting in the app timezone. */
+export function greetingForNow(timeZone: string = APP_TIME_ZONE): string {
+  const hour = appClockHour(timeZone);
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
+
 /** Groups dates into calendar months, preserving order. */
 export function groupByMonth(
   dates: readonly ISODate[],

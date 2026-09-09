@@ -25,19 +25,12 @@ export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
   low: "Low",
 };
 
-export const TASK_PRIORITY_EMPTY: Record<TaskPriority, string> = {
-  urgent: "No urgent tasks",
-  high: "No high-priority tasks",
-  medium: "No medium-priority tasks",
-  low: "No low-priority tasks",
-};
-
 export const TASK_IMPORTANCE_LABELS: Record<TaskImportance, string> = {
   important: "Important",
   not_important: "Not important",
 };
 
-/** Column accent: urgent red, high yellow, medium green, low gray. */
+/** Priority dots: urgent red, high amber, medium cyan/teal, low gray. */
 export const TASK_PRIORITY_TONE: Record<
   TaskPriority,
   {
@@ -63,11 +56,11 @@ export const TASK_PRIORITY_TONE: Record<
     bar: "bg-warning",
   },
   medium: {
-    dot: "bg-success",
-    text: "text-success",
-    soft: "bg-success-soft",
-    ring: "ring-success/35",
-    bar: "bg-success",
+    dot: "bg-accent",
+    text: "text-accent",
+    soft: "bg-accent-soft",
+    ring: "ring-accent/35",
+    bar: "bg-accent",
   },
   low: {
     dot: "bg-ink-subtle",
@@ -84,14 +77,4 @@ export function isTaskPriority(value: string): value is TaskPriority {
 
 export function isTaskImportance(value: string): value is TaskImportance {
   return (TASK_IMPORTANCES as readonly string[]).includes(value);
-}
-
-export function columnDroppableId(priority: TaskPriority): string {
-  return `column:${priority}`;
-}
-
-export function parseColumnDroppableId(id: string): TaskPriority | null {
-  if (!id.startsWith("column:")) return null;
-  const value = id.slice("column:".length);
-  return isTaskPriority(value) ? value : null;
 }

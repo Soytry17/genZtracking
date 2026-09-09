@@ -3,7 +3,7 @@
 import { useRef } from "react";
 
 import { RippleCta } from "@/components/ui/ripple-cta";
-import { useGsap } from "@/lib/anim";
+import { useGsap } from "@/lib/anim/gsap";
 import { DEFAULT_SIGNED_IN_ROUTE, ROUTES } from "@/lib/habits/constants";
 
 export function Hero({ signedIn }: { signedIn: boolean }) {

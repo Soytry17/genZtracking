@@ -9,7 +9,7 @@ export function GoalBadgeGrid({ badges }: { badges: GoalBadge[] }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>My goal badges</CardTitle>
+        <CardTitle>My Goals</CardTitle>
         <CardDescription>
           {badges.length === 0
             ? "Attach a badge when you create a habit, then complete the range to unlock it."
@@ -23,7 +23,7 @@ export function GoalBadgeGrid({ badges }: { badges: GoalBadge[] }) {
             badge.
           </p>
         ) : (
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             {badges.map((badge) => {
               const got = Boolean(badge.awarded_at);
               return (

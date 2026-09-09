@@ -2,7 +2,7 @@
 
 import { useRef, type ReactNode } from "react";
 
-import { enterFromNear, useGsap } from "@/lib/anim";
+import { enterFromNear, useGsap } from "@/lib/anim/gsap";
 
 /** Short card + field mount for login / signup. Visible-first. */
 export function AuthMount({ children }: { children: ReactNode }) {

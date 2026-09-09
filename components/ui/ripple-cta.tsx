@@ -7,7 +7,7 @@ import {
   RippleButton,
   RippleButtonRipples,
 } from "@/components/animate-ui/components/buttons/ripple";
-import { prefersReducedMotion } from "@/lib/anim";
+import { prefersReducedMotion } from "@/lib/anim/reduced-motion";
 import { cn } from "@/lib/utils";
 
 type Tone = "primary" | "secondary";

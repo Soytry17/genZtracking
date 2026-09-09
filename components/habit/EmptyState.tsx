@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { buttonClassName } from "@/components/ui";
+import { buttonClassName } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 export function EmptyState({

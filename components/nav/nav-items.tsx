@@ -20,7 +20,7 @@ const iconProps = {
   className: "size-5 shrink-0",
 } as const;
 
-/** Single source of truth for the authenticated nav, used by header and tab bar. */
+/** Single source of truth for the authenticated nav, used by sidebar and tab bar. */
 export const NAV_ITEMS: NavItem[] = [
   {
     href: ROUTES.today,
@@ -28,9 +28,8 @@ export const NAV_ITEMS: NavItem[] = [
     primary: true,
     icon: (
       <svg {...iconProps}>
-        <path d="M9 12.5l2 2 4.5-4.5" />
-        <rect x="3" y="4.5" width="18" height="16" rx="3" />
-        <path d="M8 3v3M16 3v3" />
+        <path d="M3 10.5 12 4l9 6.5" />
+        <path d="M5 10v9a1 1 0 0 0 1 1h4.5v-5h3v5H18a1 1 0 0 0 1-1v-9" />
       </svg>
     ),
   },
@@ -39,10 +38,9 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Habits",
     icon: (
       <svg {...iconProps}>
-        <rect x="3" y="3" width="7.5" height="7.5" rx="2" />
-        <rect x="13.5" y="3" width="7.5" height="7.5" rx="2" />
-        <rect x="3" y="13.5" width="7.5" height="7.5" rx="2" />
-        <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2" />
+        <circle cx="12" cy="12" r="8" />
+        <circle cx="12" cy="12" r="3" />
+        <path d="M12 4v2.5M12 17.5V20M4 12h2.5M17.5 12H20" />
       </svg>
     ),
   },

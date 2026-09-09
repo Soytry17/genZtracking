@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 
 import { FeatureGrid } from "@/components/landing/FeatureGrid";
 import { Hero } from "@/components/landing/Hero";
-import { LandingStars } from "@/components/landing/LandingStars";
+import { LandingStarsMount } from "@/components/landing/LandingStarsMount";
 import { RippleCta } from "@/components/ui/ripple-cta";
 import { getUser } from "@/lib/auth";
 import { DEFAULT_SIGNED_IN_ROUTE, ROUTES } from "@/lib/habits/constants";
@@ -32,7 +32,7 @@ export default async function LandingPage() {
 
   return (
     <div className="relative min-h-dvh">
-      <LandingStars />
+      <LandingStarsMount />
 
       <div className="relative z-10">
         <header className="sticky top-0 z-30 px-app pt-header">

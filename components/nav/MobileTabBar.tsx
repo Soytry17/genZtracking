@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useRef } from "react";
 
 import { isNavItemActive, NAV_ITEMS } from "@/components/nav/nav-items";
-import { enterFromNear, useGsap } from "@/lib/anim";
+import { enterFromNear, useGsap } from "@/lib/anim/gsap";
 import { cn } from "@/lib/utils";
 
 /** Floating glass tab bar, shown only below `md`. */
@@ -32,7 +32,7 @@ export function MobileTabBar() {
       aria-label="Main"
       className="fixed inset-x-0 bottom-0 z-40 px-app pt-2 pb-[max(0.5rem,var(--safe-bottom))] md:hidden"
     >
-      <ul className="glass-strong mx-auto flex max-w-md items-stretch justify-between rounded-full px-1.5 py-1">
+      <ul className="glass-strong mx-auto flex max-w-md items-stretch justify-between rounded-[1.75rem] px-1.5 py-1.5">
         {NAV_ITEMS.map((item) => {
           const active = isNavItemActive(pathname, item.href);
           return (
@@ -41,10 +41,10 @@ export function MobileTabBar() {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-full px-1 py-1.5 text-[11px] transition-colors",
+                  "flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1.5 text-[11px] transition-colors",
                   item.primary ? "font-semibold" : "font-medium",
                   active
-                    ? "bg-brand-soft text-brand"
+                    ? "text-brand [filter:drop-shadow(0_6px_10px_color-mix(in_oklab,var(--t-brand)_55%,transparent))]"
                     : item.primary
                       ? "text-ink hover:text-ink"
                       : "text-ink-subtle hover:text-ink",

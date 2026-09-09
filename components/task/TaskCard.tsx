@@ -1,11 +1,20 @@
 "use client";
 
-import { useSortable } from "@dnd-kit/sortable";
-import { useRef, useTransition } from "react";
-
-import { animatePress } from "@/lib/anim/anime";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
+import { createPortal } from "react-dom";
 
 import { CheckIcon } from "@/components/habit/CheckIcon";
+import { animatePress } from "@/lib/anim/anime";
+import { enterFromNear, prefersReducedMotion } from "@/lib/anim/gsap";
+import { formatAppTime } from "@/lib/habits/dates";
 import {
   TASK_PRIORITIES,
   TASK_PRIORITY_LABELS,
@@ -19,88 +28,53 @@ export function TaskCard({
   onToggle,
   onOpen,
   onPriorityChange,
-  dragHandleProps,
-  isDragging,
-  compact = false,
+  onImportanceToggle,
+  fresh = false,
 }: {
   task: DailyTask;
   onToggle: () => void;
   onOpen: () => void;
-  onPriorityChange?: (priority: TaskPriority) => void;
-  dragHandleProps?: React.HTMLAttributes<HTMLButtonElement> & {
-    role?: string;
-    tabIndex?: number;
-    "aria-disabled"?: boolean;
-    "aria-pressed"?: boolean | "mixed";
-    "aria-roledescription"?: string;
-  };
-  isDragging?: boolean;
-  compact?: boolean;
+  onPriorityChange: (priority: TaskPriority) => void;
+  onImportanceToggle: () => void;
+  fresh?: boolean;
 }) {
+  const rootRef = useRef<HTMLDivElement>(null);
   const checkRef = useRef<HTMLButtonElement>(null);
   const [pending, start] = useTransition();
   const done = Boolean(task.completed_at);
-  const tone = TASK_PRIORITY_TONE[task.priority];
   const important = task.importance === "important";
+  const completedLabel = task.completed_at
+    ? formatAppTime(task.completed_at)
+    : "";
+
+  useEffect(() => {
+    if (!fresh) return;
+    const el = rootRef.current;
+    if (!el || prefersReducedMotion()) return;
+    const tween = enterFromNear(el, {
+      y: 8,
+      scale: 0.97,
+      opacityFrom: 0.86,
+      duration: 0.28,
+    });
+    tween.eventCallback("onComplete", () => {
+      el.style.transform = "none";
+    });
+    return () => {
+      tween.kill();
+      el.style.transform = "none";
+    };
+  }, [fresh, task.id]);
 
   return (
     <div
+      ref={rootRef}
       className={cn(
-        "rounded-2xl glass px-2.5 py-2 sm:px-3",
-        isDragging && "opacity-40",
-        done && "opacity-70",
+        "rounded-[1.35rem] glass px-3 py-2.5 sm:px-3.5 sm:py-3",
+        done && "opacity-80",
       )}
     >
-      <div className="flex items-start gap-1.5">
-        {dragHandleProps ? (
-          <button
-            type="button"
-            className="mt-1 hidden size-8 shrink-0 cursor-grab items-center justify-center rounded-lg text-ink-subtle hover:bg-glass hover:text-ink active:cursor-grabbing md:inline-flex"
-            aria-label={`Drag ${task.title}`}
-            {...dragHandleProps}
-          >
-            <DragGrip />
-          </button>
-        ) : null}
-
-        <button
-          type="button"
-          onClick={onOpen}
-          className="min-w-0 flex-1 rounded-lg py-0.5 text-left"
-        >
-          <span
-            className={cn(
-              "block text-sm font-medium leading-snug text-ink",
-              done && "text-ink-muted line-through",
-            )}
-          >
-            {task.title}
-          </span>
-          <span className="mt-1 flex flex-wrap items-center gap-1.5">
-            <span
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium",
-                important
-                  ? "bg-brand-soft text-brand"
-                  : "bg-glass text-ink-subtle",
-              )}
-            >
-              <span
-                className={cn(
-                  "size-1.5 rounded-full",
-                  important ? "bg-brand" : "bg-ink-subtle",
-                )}
-              />
-              {important ? "Important" : "Not important"}
-            </span>
-            {task.description ? (
-              <span className="truncate text-[11px] text-ink-subtle">
-                {task.description}
-              </span>
-            ) : null}
-          </span>
-        </button>
-
+      <div className="flex items-start gap-2.5">
         <button
           ref={checkRef}
           type="button"
@@ -112,87 +86,228 @@ export function TaskCard({
           }}
           onClick={() => start(onToggle)}
           className={cn(
-            "relative mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl transition-colors",
-            done ? cn(tone.soft, tone.text) : "glass-tile text-ink-muted hover:bg-glass",
+            "relative mt-0.5 flex size-11 shrink-0 items-center justify-center rounded-full transition-colors sm:size-10",
+            done
+              ? "bg-brand text-brand-ink"
+              : "glass-tile text-ink-muted hover:bg-glass",
           )}
           aria-label={done ? `Uncheck ${task.title}` : `Complete ${task.title}`}
         >
+          <span
+            className={cn(
+              "absolute inset-[3px] rounded-full border",
+              done ? "border-transparent" : "border-white/20",
+            )}
+            aria-hidden
+          />
           <CheckIcon active={done} className="size-4" />
         </button>
-      </div>
 
-      {onPriorityChange && !compact ? (
-        <div className="mt-2 flex items-center gap-1 md:hidden">
-          {TASK_PRIORITIES.map((priority) => (
-            <button
-              key={priority}
-              type="button"
-              disabled={pending}
-              onClick={() => start(() => onPriorityChange(priority))}
+        <button
+          type="button"
+          onClick={onOpen}
+          className="min-w-0 flex-1 rounded-lg py-0.5 text-left"
+        >
+          <span
+            className={cn(
+              "block text-sm font-medium leading-snug text-ink",
+              done && "text-ink-muted line-through decoration-ink-subtle/70",
+            )}
+          >
+            {task.title}
+          </span>
+          <span className="mt-1.5 flex min-w-0 flex-wrap items-center gap-1.5">
+            <span
               className={cn(
-                "size-6 rounded-full",
-                TASK_PRIORITY_TONE[priority].soft,
-                task.priority === priority &&
-                  `ring-2 ring-offset-1 ring-offset-transparent ${TASK_PRIORITY_TONE[priority].ring}`,
+                "inline-flex h-6 items-center gap-1 rounded-full px-2 text-[10px] font-medium",
+                important
+                  ? "bg-brand-soft text-brand"
+                  : "bg-glass text-ink-subtle",
               )}
-              aria-label={`Set priority ${TASK_PRIORITY_LABELS[priority]}`}
-              aria-pressed={task.priority === priority}
-              title={TASK_PRIORITY_LABELS[priority]}
             >
-              <span
-                className={cn(
-                  "mx-auto block size-2 rounded-full",
-                  TASK_PRIORITY_TONE[priority].dot,
-                )}
-              />
-            </button>
-          ))}
-        </div>
-      ) : null}
+              {important ? "Important" : TASK_PRIORITY_LABELS[task.priority]}
+            </span>
+            {completedLabel ? (
+              <time
+                className="text-[11px] tabular-nums text-ink-subtle"
+                dateTime={task.completed_at ?? undefined}
+              >
+                {completedLabel}
+              </time>
+            ) : null}
+          </span>
+        </button>
+
+        <TaskRowMenu
+          task={task}
+          disabled={pending}
+          onPriorityChange={(priority) => start(() => onPriorityChange(priority))}
+          onImportanceToggle={() => start(onImportanceToggle)}
+          onEdit={onOpen}
+        />
+      </div>
     </div>
   );
 }
 
-export function DraggableTaskCard({
+function TaskRowMenu({
   task,
-  onToggle,
-  onOpen,
+  disabled,
   onPriorityChange,
+  onImportanceToggle,
+  onEdit,
 }: {
   task: DailyTask;
-  onToggle: () => void;
-  onOpen: () => void;
+  disabled: boolean;
   onPriorityChange: (priority: TaskPriority) => void;
+  onImportanceToggle: () => void;
+  onEdit: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, isDragging } = useSortable({
-    id: task.id,
-    data: { type: "task", priority: task.priority },
-    animateLayoutChanges: () => false,
-  });
+  const menuId = useId();
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [host, setHost] = useState<HTMLElement | null>(null);
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(
+    null,
+  );
+  const important = task.importance === "important";
+
+  useEffect(() => {
+    setHost(document.body);
+  }, []);
+
+  const updatePosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    const width = 176;
+    const left = Math.min(
+      Math.max(8, rect.right - width),
+      window.innerWidth - width - 8,
+    );
+    setCoords({ top: rect.bottom + 4, left });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    updatePosition();
+  }, [open, updatePosition]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointer(event: PointerEvent) {
+      const target = event.target as Node;
+      if (
+        triggerRef.current?.contains(target) ||
+        menuRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setOpen(false);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("pointerdown", onPointer);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("pointerdown", onPointer);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, updatePosition]);
 
   return (
-    <div ref={setNodeRef} className={isDragging ? "z-10" : undefined}>
-      <TaskCard
-        task={task}
-        isDragging={isDragging}
-        onToggle={onToggle}
-        onOpen={onOpen}
-        onPriorityChange={onPriorityChange}
-        dragHandleProps={{ ...listeners, ...attributes }}
-      />
+    <div className="relative shrink-0">
+      <button
+        ref={triggerRef}
+        type="button"
+        disabled={disabled}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-controls={open ? menuId : undefined}
+        aria-label={`More actions for ${task.title}`}
+        onClick={() => setOpen((value) => !value)}
+        className="inline-flex size-11 items-center justify-center rounded-full text-ink-subtle hover:bg-glass hover:text-ink sm:size-9"
+      >
+        <DotsIcon />
+      </button>
+      {open && host && coords
+        ? createPortal(
+            <div
+              ref={menuRef}
+              id={menuId}
+              role="menu"
+              style={{ top: coords.top, left: coords.left }}
+              className="menu-popover fixed z-50 w-44 overflow-hidden rounded-2xl py-1"
+            >
+              <p className="px-3 py-1.5 text-[10px] font-medium uppercase tracking-wider text-ink-subtle">
+                Priority
+              </p>
+              {TASK_PRIORITIES.map((priority) => {
+                const tone = TASK_PRIORITY_TONE[priority];
+                const selected = task.priority === priority;
+                return (
+                  <button
+                    key={priority}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={selected}
+                    className={cn(
+                      "flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-glass",
+                      selected ? tone.text : "text-ink",
+                    )}
+                    onClick={() => {
+                      onPriorityChange(priority);
+                      setOpen(false);
+                    }}
+                  >
+                    <span className={cn("size-2 rounded-full", tone.dot)} />
+                    {TASK_PRIORITY_LABELS[priority]}
+                  </button>
+                );
+              })}
+              <div className="my-1 h-px bg-hairline" />
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full items-center px-3 py-2 text-left text-sm text-ink hover:bg-glass"
+                onClick={() => {
+                  onImportanceToggle();
+                  setOpen(false);
+                }}
+              >
+                {important ? "Mark not important" : "Mark important"}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                className="flex w-full items-center px-3 py-2 text-left text-sm text-ink hover:bg-glass"
+                onClick={() => {
+                  onEdit();
+                  setOpen(false);
+                }}
+              >
+                Edit
+              </button>
+            </div>,
+            host,
+          )
+        : null}
     </div>
   );
 }
 
-function DragGrip() {
+function DotsIcon() {
   return (
-    <svg viewBox="0 0 16 16" className="size-3.5" aria-hidden>
-      <circle cx="5" cy="4" r="1.15" fill="currentColor" />
-      <circle cx="11" cy="4" r="1.15" fill="currentColor" />
-      <circle cx="5" cy="8" r="1.15" fill="currentColor" />
-      <circle cx="11" cy="8" r="1.15" fill="currentColor" />
-      <circle cx="5" cy="12" r="1.15" fill="currentColor" />
-      <circle cx="11" cy="12" r="1.15" fill="currentColor" />
+    <svg viewBox="0 0 24 24" className="size-4" aria-hidden>
+      <circle cx="12" cy="5" r="1.4" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.4" fill="currentColor" />
+      <circle cx="12" cy="19" r="1.4" fill="currentColor" />
     </svg>
   );
 }

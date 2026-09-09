@@ -28,15 +28,15 @@ export function HabitCard({
       className="block min-w-0"
       data-habit-card
     >
-      <Card className="h-full transition-colors hover:bg-glass-strong active:bg-glass-strong">
+      <Card className="h-full rounded-[1.6rem] transition-colors hover:bg-glass-strong active:bg-glass-strong">
         <CardBody className="space-y-4">
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <span
-                className="flex size-10 shrink-0 items-center justify-center rounded-2xl glass-thin"
-                style={{ color: hex }}
+                className="flex size-12 shrink-0 items-center justify-center rounded-2xl"
+                style={{ color: hex, backgroundColor: `${hex}22` }}
               >
-                <HabitIcon name={habit.icon} />
+                <HabitIcon name={habit.icon} className="size-6" />
               </span>
               <div className="min-w-0">
                 <h2 className="truncate font-semibold tracking-tight text-ink">{habit.title}</h2>
@@ -53,6 +53,7 @@ export function HabitCard({
           <ProgressBar
             percent={progress.percent}
             label={`${progress.doneDays} / ${progress.totalDays} days`}
+            barClassName="bg-brand"
           />
 
           <div className="flex flex-wrap items-center gap-2">

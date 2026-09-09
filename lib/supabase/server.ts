@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 
 import { createServerClient } from "@supabase/ssr";
@@ -8,10 +9,11 @@ import type { Database } from "@/types/database";
 /**
  * Supabase client for Server Components, Server Actions and Route Handlers.
  *
- * Must be awaited and must be created per request — never hoist it to a module
- * level constant, or requests would share another user's session.
+ * Request-memoized via React `cache` so layout + page + queries share one
+ * instance. Never hoist to a module-level constant — that would share sessions
+ * across users.
  */
-export async function createClient() {
+export const createClient = cache(async () => {
   const cookieStore = await cookies();
 
   return createServerClient<Database>(env.supabaseUrl, env.supabaseAnonKey, {
@@ -31,6 +33,6 @@ export async function createClient() {
       },
     },
   });
-}
+});
 
 export type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;

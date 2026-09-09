@@ -32,7 +32,7 @@ export function BadgeGrid({
         </CardDescription>
       </CardHeader>
       <CardBody>
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {badges.map((badge) => {
             const got = earnedById.get(badge.id);
             return (

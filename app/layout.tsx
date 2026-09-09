@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#08080c",
+  themeColor: "#0B1020",
   viewportFit: "cover",
 };
 
@@ -32,10 +32,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} min-h-dvh bg-canvas text-ink antialiased`}
-      >
+    <html lang="en" className={`dark ${inter.variable} ${geistMono.variable}`}>
+      <body className="min-h-dvh bg-canvas font-sans text-ink antialiased">
         {children}
       </body>
     </html>

@@ -15,13 +15,12 @@ export default async function HabitDetailPage({
 }) {
   const { id } = await params;
   const { user, profile } = await requireSession();
-  const habit = await getHabit(user.id, id);
-  if (!habit) notFound();
-
-  const [logs, goalBadge] = await Promise.all([
-    getHabitLogs(habit.id),
-    getGoalBadgeForHabit(user.id, habit.id),
+  const [habit, logs, goalBadge] = await Promise.all([
+    getHabit(user.id, id),
+    getHabitLogs(id),
+    getGoalBadgeForHabit(user.id, id),
   ]);
+  if (!habit) notFound();
   const days = buildHabitDays(habit, logs);
 
   return (

@@ -14,4 +14,3 @@ export {
   Pill,
 } from "./card";
 export { Field, inputClassName, labelClassName } from "./field";
-export { RippleCta } from "./ripple-cta";

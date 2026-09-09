@@ -2,9 +2,11 @@
 
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 
-import { enterFromNear, useGsap } from "@/lib/anim";
+import { animatePress } from "@/lib/anim/anime";
+import { enterFromNear, useGsap } from "@/lib/anim/gsap";
 
-import { Button, Field, inputClassName } from "@/components/ui";
+import { Button } from "@/components/ui/button";
+import { Field, inputClassName } from "@/components/ui/field";
 import {
   TASK_DESCRIPTION_MAX_LENGTH,
   TASK_IMPORTANCE_LABELS,
@@ -27,7 +29,9 @@ export function TaskSheet({
   onDeleted: (taskId: string) => void;
 }) {
   const titleId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const backdropRef = useRef<HTMLButtonElement>(null);
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
   const [importance, setImportance] = useState<TaskImportance>(task.importance);
@@ -36,8 +40,13 @@ export function TaskSheet({
   const [pending, start] = useTransition();
 
   useGsap(
-    panelRef,
+    rootRef,
     () => {
+      enterFromNear(backdropRef.current, {
+        y: 0,
+        opacityFrom: 0.72,
+        duration: 0.28,
+      });
       enterFromNear(panelRef.current, {
         y: 28,
         opacityFrom: 0.88,
@@ -64,8 +73,12 @@ export function TaskSheet({
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center">
+    <div
+      ref={rootRef}
+      className="fixed inset-0 z-50 flex items-end justify-center md:items-center"
+    >
       <button
+        ref={backdropRef}
         type="button"
         className="absolute inset-0 bg-black/50"
         aria-label="Close"
@@ -131,19 +144,12 @@ export function TaskSheet({
             <p className="text-xs font-medium text-ink-muted">Importance</p>
             <div className="flex flex-wrap gap-1.5">
               {TASK_IMPORTANCES.map((value) => (
-                <button
+                <ImportanceChoice
                   key={value}
-                  type="button"
-                  onClick={() => setImportance(value)}
-                  className={cn(
-                    "rounded-full px-3 py-1.5 text-xs",
-                    importance === value
-                      ? "bg-brand-soft text-brand"
-                      : "glass text-ink-muted hover:bg-glass-strong",
-                  )}
-                >
-                  {TASK_IMPORTANCE_LABELS[value]}
-                </button>
+                  label={TASK_IMPORTANCE_LABELS[value]}
+                  selected={importance === value}
+                  onSelect={() => setImportance(value)}
+                />
               ))}
             </div>
           </div>
@@ -192,5 +198,35 @@ export function TaskSheet({
         </div>
       </div>
     </div>
+  );
+}
+
+function ImportanceChoice({
+  label,
+  selected,
+  onSelect,
+}: {
+  label: string;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const ref = useRef<HTMLButtonElement>(null);
+  return (
+    <button
+      ref={ref}
+      type="button"
+      onPointerDown={(event) => {
+        if (event.button === 0) animatePress(ref.current, 0.92);
+      }}
+      onClick={onSelect}
+      className={cn(
+        "rounded-full px-3 py-1.5 text-xs",
+        selected
+          ? "bg-brand-soft text-brand"
+          : "glass text-ink-muted hover:bg-glass-strong",
+      )}
+    >
+      {label}
+    </button>
   );
 }

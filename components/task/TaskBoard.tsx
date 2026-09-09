@@ -1,175 +1,55 @@
 "use client";
 
-import {
-  DndContext,
-  DragOverlay,
-  KeyboardSensor,
-  MouseSensor,
-  closestCorners,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-  type DragStartEvent,
-} from "@dnd-kit/core";
-import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import type { ReactNode } from "react";
 
 import { DoneToday } from "@/components/task/DoneToday";
+import { AddTaskForm } from "@/components/task/AddTaskForm";
 import { TaskCard } from "@/components/task/TaskCard";
-import { TaskColumn } from "@/components/task/TaskColumn";
 import { TaskSheet } from "@/components/task/TaskSheet";
+import type { TodayTasksApi } from "@/components/task/useTodayTasks";
 import {
-  TASK_PRIORITIES,
-  parseColumnDroppableId,
+  TASK_PRIORITY_LABELS,
+  TASK_PRIORITY_TONE,
 } from "@/lib/tasks/constants";
-import { setTaskPriority, toggleTaskComplete } from "@/lib/tasks/actions";
-import { sortOpenTasks } from "@/lib/tasks/order";
-import type { DailyTask, TaskPriority } from "@/types/database";
+import { cn } from "@/lib/utils";
+import type { TaskPriority } from "@/types/database";
 
-export function TaskBoard({
-  openTasks,
-  doneToday,
-}: {
-  openTasks: DailyTask[];
-  doneToday: DailyTask[];
-}) {
-  const [tasks, setTasks] = useState(openTasks);
-  const [done, setDone] = useState(doneToday);
-  const [editing, setEditing] = useState<DailyTask | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const skipClick = useRef(false);
-  const [, start] = useTransition();
-
-  useEffect(() => {
-    setTasks(sortOpenTasks(openTasks));
-  }, [openTasks]);
-
-  useEffect(() => {
-    setDone(doneToday);
-  }, [doneToday]);
-
-  const sensors = useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
-
-  const byPriority = useMemo(() => {
-    const grouped: Record<TaskPriority, DailyTask[]> = {
-      urgent: [],
-      high: [],
-      medium: [],
-      low: [],
-    };
-    for (const task of tasks) grouped[task.priority].push(task);
-    return grouped;
-  }, [tasks]);
-
-  const activeTask = activeId
-    ? (tasks.find((task) => task.id === activeId) ?? null)
-    : null;
-
-  function applyTask(next: DailyTask) {
-    if (next.completed_at) {
-      setTasks((prev) => prev.filter((task) => task.id !== next.id));
-      setDone((prev) => [next, ...prev.filter((task) => task.id !== next.id)]);
-    } else {
-      setDone((prev) => prev.filter((task) => task.id !== next.id));
-      setTasks((prev) =>
-        sortOpenTasks([...prev.filter((task) => task.id !== next.id), next]),
-      );
-    }
-    setEditing((current) => (current?.id === next.id ? next : current));
-  }
-
-  function removeTask(taskId: string) {
-    setTasks((prev) => prev.filter((task) => task.id !== taskId));
-    setDone((prev) => prev.filter((task) => task.id !== taskId));
-    setEditing((current) => (current?.id === taskId ? null : current));
-  }
-
-  function openTask(task: DailyTask) {
-    if (skipClick.current) {
-      skipClick.current = false;
-      return;
-    }
-    setEditing(task);
-  }
-
-  function movePriority(task: DailyTask, priority: TaskPriority) {
-    if (task.priority === priority) return;
-    const next = { ...task, priority };
-    applyTask(next);
-    setError(null);
-    start(async () => {
-      const result = await setTaskPriority(task.id, priority);
-      if (!result.ok) {
-        applyTask(task);
-        setError(result.error);
-        return;
-      }
-      applyTask(result.data);
-    });
-  }
-
-  function toggle(task: DailyTask) {
-    const next: DailyTask = {
-      ...task,
-      completed_at: task.completed_at ? null : new Date().toISOString(),
-    };
-    applyTask(next);
-    setError(null);
-    start(async () => {
-      const result = await toggleTaskComplete(task.id);
-      if (!result.ok) {
-        applyTask(task);
-        setError(result.error);
-        return;
-      }
-      applyTask(result.data);
-    });
-  }
-
-  function onDragStart(event: DragStartEvent) {
-    skipClick.current = true;
-    setActiveId(String(event.active.id));
-  }
-
-  function onDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    setActiveId(null);
-    if (!over) return;
-
-    const overData = over.data.current as { priority?: TaskPriority } | undefined;
-    const overTask = tasks.find((row) => row.id === String(over.id));
-    const priority =
-      parseColumnDroppableId(String(over.id)) ??
-      overData?.priority ??
-      overTask?.priority ??
-      null;
-    if (!priority) return;
-
-    const task = tasks.find((row) => row.id === String(active.id));
-    if (!task) return;
-    movePriority(task, priority);
-  }
-
-  const openCount = tasks.length;
+export function TaskBoard({ tasks }: { tasks: TodayTasksApi }) {
+  const {
+    done,
+    byPriority,
+    visiblePriorities,
+    editing,
+    freshIds,
+    error,
+    totalCount,
+    applyTask,
+    removeTask,
+    openTask,
+    closeEditor,
+    handleCreated,
+    movePriority,
+    toggleImportance,
+    toggle,
+  } = tasks;
 
   return (
-    <section className="space-y-3" aria-label="Priority tasks">
-      <header className="flex items-baseline justify-between gap-3">
-        <h2 className="text-sm font-medium text-ink-muted">Tasks</h2>
-        <p className="text-xs text-ink-subtle">
-          {openCount === 0
-            ? "Nothing open"
-            : `${openCount} open · unfinished roll over`}
-        </p>
+    <section className="space-y-4" aria-label="Today's tasks">
+      <header className="flex items-center gap-2">
+        <h2 className="text-lg font-semibold tracking-tight">
+          <span className="md:hidden">Today&apos;s Tasks</span>
+          <span className="hidden md:inline">Tasks</span>
+        </h2>
+        <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[11px] font-semibold tabular-nums text-brand">
+          {totalCount}
+        </span>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="hidden rounded-full glass px-2.5 py-1 text-[11px] font-medium text-ink-muted sm:inline">
+            Sort by Priority
+          </span>
+          <DoneToday tasks={done} onUndo={toggle} />
+        </div>
       </header>
-
-      <p className="text-xs text-ink-subtle md:hidden">
-        Swipe for other priorities. Use the dots on a card to change priority.
-      </p>
 
       {error ? (
         <p role="alert" className="text-sm text-danger">
@@ -177,50 +57,69 @@ export function TaskBoard({
         </p>
       ) : null}
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={onDragStart}
-        onDragCancel={() => setActiveId(null)}
-        onDragEnd={onDragEnd}
-      >
-        <div className="flex gap-3 overflow-x-auto pb-1 snap-x snap-mandatory md:grid md:grid-cols-4 md:overflow-visible md:pb-0">
-          {TASK_PRIORITIES.map((priority) => (
-            <TaskColumn
+      <AddTaskForm onCreated={handleCreated} />
+
+      {visiblePriorities.length === 0 ? (
+        <p className="rounded-[1.5rem] glass px-4 py-8 text-center text-sm text-ink-muted">
+          Nothing on the list yet. Add a task above — unfinished ones roll over.
+        </p>
+      ) : (
+        <div className="space-y-5">
+          {visiblePriorities.map((priority) => (
+            <PriorityGroup
               key={priority}
               priority={priority}
-              tasks={byPriority[priority]}
-              onOpen={openTask}
-              onToggle={toggle}
-              onPriorityChange={movePriority}
-              onCreated={applyTask}
-            />
+              count={byPriority[priority].length}
+            >
+              {byPriority[priority].map((task) => (
+                <li key={task.id}>
+                  <TaskCard
+                    task={task}
+                    fresh={freshIds.has(task.id)}
+                    onOpen={() => openTask(task)}
+                    onToggle={() => toggle(task)}
+                    onPriorityChange={(next) => movePriority(task, next)}
+                    onImportanceToggle={() => toggleImportance(task)}
+                  />
+                </li>
+              ))}
+            </PriorityGroup>
           ))}
         </div>
-        <DragOverlay dropAnimation={null}>
-          {activeTask ? (
-            <div className="w-[min(82vw,19rem)] md:w-64">
-              <TaskCard
-                task={activeTask}
-                compact
-                onOpen={() => undefined}
-                onToggle={() => undefined}
-              />
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
-
-      <DoneToday tasks={done} onToggle={toggle} onOpen={openTask} />
+      )}
 
       {editing ? (
         <TaskSheet
           task={editing}
-          onClose={() => setEditing(null)}
+          onClose={closeEditor}
           onUpdated={applyTask}
           onDeleted={removeTask}
         />
       ) : null}
+    </section>
+  );
+}
+
+function PriorityGroup({
+  priority,
+  count,
+  children,
+}: {
+  priority: TaskPriority;
+  count: number;
+  children: ReactNode;
+}) {
+  const tone = TASK_PRIORITY_TONE[priority];
+  return (
+    <section aria-label={`${TASK_PRIORITY_LABELS[priority]} tasks`}>
+      <header className="mb-2 flex items-center gap-2">
+        <span className={cn("size-2 shrink-0 rounded-full", tone.dot)} />
+        <h3 className={cn("text-sm font-semibold", tone.text)}>
+          {TASK_PRIORITY_LABELS[priority]}
+        </h3>
+        <span className="text-xs tabular-nums text-ink-subtle">{count}</span>
+      </header>
+      <ul className="space-y-2">{children}</ul>
     </section>
   );
 }

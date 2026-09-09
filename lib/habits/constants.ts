@@ -89,7 +89,7 @@ export type HabitColor = (typeof HABIT_COLORS)[number];
 export const DEFAULT_HABIT_COLOR: HabitColor = "violet";
 
 export const HABIT_COLOR_HEX: Record<HabitColor, string> = {
-  violet: "#7c5cff",
+  violet: "#6366F1",
   cyan: "#22d3ee",
   emerald: "#34d399",
   amber: "#fbbf24",

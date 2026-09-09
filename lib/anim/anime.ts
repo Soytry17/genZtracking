@@ -2,7 +2,7 @@
 
 import { animate, createDrawable, type AnimationParams } from "animejs";
 
-import { prefersReducedMotion } from "@/lib/anim/gsap";
+import { prefersReducedMotion } from "@/lib/anim/reduced-motion";
 
 type Target = Parameters<typeof animate>[0];
 

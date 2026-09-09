@@ -9,7 +9,7 @@ import { CheckIcon } from "@/components/habit/CheckIcon";
 import { HabitIcon } from "@/components/habit/HabitIcon";
 import { StreakBadge } from "@/components/habit/StreakBadge";
 import { useGamify } from "@/components/gamify/GamifyProvider";
-import { inputClassName } from "@/components/ui";
+import { inputClassName } from "@/components/ui/field";
 import { saveDayNote, spendFreeze, toggleDay } from "@/lib/habits/actions";
 import {
   DAY_NOTE_MAX_LENGTH,
@@ -17,9 +17,10 @@ import {
   ROUTES,
   isHabitColor,
 } from "@/lib/habits/constants";
+import type { TodayHabitRow, TodayLogRow } from "@/lib/habits/queries";
 import { addDays, todayISO } from "@/lib/habits/dates";
 import { cn } from "@/lib/utils";
-import type { Habit, HabitLog, HabitLogStatus } from "@/types/database";
+import type { HabitLogStatus } from "@/types/database";
 
 type DayStatus = HabitLogStatus | null;
 
@@ -30,13 +31,19 @@ export function TodayRow({
   yesterdayLog,
   freezeTokens,
   onFreezeSpent,
+  onPatch,
 }: {
-  habit: Habit;
-  log: HabitLog | null;
+  habit: TodayHabitRow;
+  log: TodayLogRow | null;
   yesterdayDue: boolean;
-  yesterdayLog: HabitLog | null;
+  yesterdayLog: TodayLogRow | null;
   freezeTokens: number;
   onFreezeSpent?: (spent: boolean) => void;
+  onPatch?: (patch: {
+    log?: TodayLogRow | null;
+    yesterdayLog?: TodayLogRow | null;
+    currentStreak?: number;
+  }) => void;
 }) {
   const { report } = useGamify();
   const checkRef = useRef<HTMLButtonElement>(null);
@@ -97,25 +104,66 @@ export function TodayRow({
   function onCheck() {
     if (pending || frozen) return;
     const previous = status;
+    const previousLog = log;
     const next: DayStatus = done ? null : "done";
     setStatus(next);
-    run(
-      () => toggleDay(habit.id, today),
-      () => {
+    onPatch?.({
+      log:
+        next === "done"
+          ? {
+              id: log?.id ?? habit.id,
+              habit_id: habit.id,
+              log_date: today,
+              status: "done",
+              note: log?.note ?? null,
+            }
+          : null,
+    });
+    start(async () => {
+      const result = await toggleDay(habit.id, today);
+      if (!result.ok) {
         setStatus(previous);
-      },
-    );
+        onPatch?.({ log: previousLog });
+        setError(result.error);
+        return;
+      }
+      setError(null);
+      report(result.gamify);
+      onPatch?.({
+        log:
+          result.data.status === "done"
+            ? {
+                id: log?.id ?? habit.id,
+                habit_id: habit.id,
+                log_date: today,
+                status: "done",
+                note: note.trim() ? note : (log?.note ?? null),
+              }
+            : null,
+        currentStreak: result.data.currentStreak,
+      });
+    });
   }
 
   function onUseFreeze() {
     if (pending || freezeTokens < 1) return;
     setMissedYesterday(false);
     onFreezeSpent?.(true);
+    onPatch?.({
+      yesterdayLog: {
+        id: habit.id,
+        habit_id: habit.id,
+        log_date: yesterday,
+        status: "frozen",
+        note: null,
+      },
+    });
     run(
       () => spendFreeze(habit.id, yesterday),
       () => {
         setMissedYesterday(true);
         onFreezeSpent?.(false);
+        onPatch?.({ yesterdayLog: null });
       },
     );
   }
@@ -129,20 +177,35 @@ export function TodayRow({
     if (!note.trim()) setNoteOpen(false);
   }
 
+  const statusLabel = frozen
+    ? "Frozen"
+    : done
+      ? "Done"
+      : skipped
+        ? "Skipped"
+        : "In progress";
+  const statusTone = frozen
+    ? "bg-freeze-soft text-freeze"
+    : done
+      ? "bg-success-soft text-success"
+      : skipped
+        ? "glass text-ink-subtle"
+        : "bg-brand-soft text-brand";
+
   return (
     <div
       data-today-row
       className={cn(
-        "min-w-0 rounded-card glass shadow-glass",
-        done && "opacity-80",
+        "min-w-0 rounded-[1.6rem] glass shadow-glass",
+        done && "opacity-90",
       )}
     >
-      <div className="flex items-center gap-3 px-3 py-3.5 sm:gap-4 sm:px-5 sm:py-4">
+      <div className="flex items-center gap-3 px-3.5 py-4 sm:gap-4 sm:px-5 sm:py-5">
         <span
-          className="flex size-11 shrink-0 items-center justify-center rounded-2xl glass-thin sm:size-12"
-          style={{ color: hex }}
+          className="flex size-12 shrink-0 items-center justify-center rounded-2xl sm:size-14"
+          style={{ color: hex, backgroundColor: `${hex}22` }}
         >
-          <HabitIcon name={habit.icon} className="size-5 sm:size-6" />
+          <HabitIcon name={habit.icon} className="size-6 sm:size-7" />
         </span>
 
         <div className="min-w-0 flex-1">
@@ -155,6 +218,17 @@ export function TodayRow({
                 {habit.title}
               </Link>
             </h2>
+            <span
+              className={cn(
+                "inline-flex rounded-full px-2 py-0.5 text-[10px] font-medium",
+                statusTone,
+              )}
+            >
+              {statusLabel}
+            </span>
+          </div>
+
+          <div className="mt-1.5">
             <StreakBadge current={habit.current_streak} size="sm" />
           </div>
 
@@ -219,7 +293,7 @@ export function TodayRow({
           }}
           onClick={onCheck}
           className={cn(
-            "relative flex size-14 shrink-0 items-center justify-center rounded-2xl text-lg transition-colors sm:size-12",
+            "relative flex size-14 shrink-0 items-center justify-center rounded-full text-lg transition-colors sm:size-12",
             frozen && "bg-freeze-soft text-freeze hairline",
             skipped && "glass-tile text-ink-subtle",
             !status && "glass-tile text-ink-muted hover:bg-glass",
